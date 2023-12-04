@@ -7,6 +7,9 @@ import ProjectForm from './components/project/ProjectForm';
 import ProjectDetails from './components/project/ProjectDetails';
 import PromptForm from './components/project/PromptForm';
 import { addProject, getAllProjects, getProjectById } from './utils/indexedDB';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+
+const theme = createTheme();
 
 function App() {
   const [projects, setProjects] = React.useState([]);
@@ -32,23 +35,25 @@ function App() {
   };
 
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" exact element={
-            <>
-              <ProjectList projects={projects} />
-              <ProjectForm onCreateProject={handleCreateProject} />
-            </>
-          }>
-          </Route>
-          <Route path="/projects/:projectId" element={
-            <ProjectDetails getProjectById={getProjectById} />
-          }>
-          </Route>
-        </Routes>
-      </Layout>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" exact element={
+              <>
+                <ProjectList projects={projects} />
+                <ProjectForm onCreateProject={handleCreateProject} />
+              </>
+            }>
+            </Route>
+            <Route path="/projects/:projectId" element={
+              <ProjectDetails getProjectById={getProjectById} />
+            }>
+            </Route>
+          </Routes>
+        </Layout>
+      </Router>
+    </ThemeProvider>
   );
 }
 

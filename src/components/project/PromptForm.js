@@ -1,5 +1,7 @@
 // src/components/project/PromptForm.js
 import React, { useState } from 'react';
+import { Button, TextareaAutosize, TextField } from '@mui/material';
+import { FormContainer, Label, Textarea, SubmitButton } from './PromptForm.styles';
 
 const PromptForm = ({ onCreatePrompt }) => {
   const [promptText, setPromptText] = useState('');
@@ -11,16 +13,19 @@ const PromptForm = ({ onCreatePrompt }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Prompt Text:
-        <textarea
+    <FormContainer onSubmit={handleSubmit}>
+      <Label>
+        <span>Prompt Text:</span>
+        <Textarea
+          rowsMin={3}
           value={promptText}
           onChange={(e) => setPromptText(e.target.value)}
         />
-      </label>
-      <button type="submit">Create Prompt</button>
-    </form>
+      </Label>
+      <SubmitButton type="submit">
+        Create Prompt
+      </SubmitButton>
+    </FormContainer>
   );
 };
 

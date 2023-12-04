@@ -1,16 +1,21 @@
 // src/components/project/ProjectList.js
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { List, ListItem, ListItemText, Typography, Link } from '@mui/material';
+import { ListContainer, ListItemLink } from './ProjectList.styles';
 
 const ProjectList = ({ projects }) => {
   return (
-    <ul>
+    <ListContainer>
       {projects.map((project) => (
-        <li key={project.id}>
-          <Link to={`/projects/${project.id}`}>{project.name}</Link>
-        </li>
+        <ListItem key={project.id}>
+          <ListItemLink component={Link} href={`/projects/${project.id}`}>
+            <ListItemText>
+              <Typography variant="h6">{project.name}</Typography>
+            </ListItemText>
+          </ListItemLink>
+        </ListItem>
       ))}
-    </ul>
+    </ListContainer>
   );
 };
 
