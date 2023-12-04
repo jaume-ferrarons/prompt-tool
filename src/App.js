@@ -1,24 +1,54 @@
-import logo from './logo.svg';
-import './App.css';
+// src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Layout from './components/common/Layout';
+import ProjectList from './components/project/ProjectList';
+import ProjectForm from './components/project/ProjectForm';
+import ProjectDetails from './components/project/ProjectDetails';
+import PromptForm from './components/project/PromptForm';
+import { addProject, getAllProjects, getProjectById } from './utils/indexedDB';
 
 function App() {
+  const [projects, setProjects] = React.useState([]);
+
+  React.useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    const projectsFromDB = await getAllProjects();
+    setProjects(projectsFromDB);
+  };
+
+  const handleCreateProject = async (projectData) => {
+    const projectId = await addProject(projectData);
+    const newProject = { id: projectId, ...projectData };
+    setProjects([...projects, newProject]);
+  };
+
+  const handleSelectProject = (projectId) => {
+    // Implement navigation or route to project details page
+    console.log(`Selected project: ${projectId}`);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" exact element={
+            <>
+              <ProjectList projects={projects} />
+              <ProjectForm onCreateProject={handleCreateProject} />
+            </>
+          }>
+          </Route>
+          <Route path="/projects/:projectId" element={
+            <ProjectDetails getProjectById={getProjectById} />
+          }>
+          </Route>
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
 
