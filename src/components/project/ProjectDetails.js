@@ -1,6 +1,19 @@
 // src/components/project/ProjectDetails.js
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import {
+  Button,
+  Grid,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from '@mui/material';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import PromptForm from './PromptForm';
 import { addPrompt, getPromptsByProjectId, addAnswer, getAllAnswersByProjectId } from '../../utils/indexedDB';
@@ -16,6 +29,7 @@ const ProjectDetails = ({ getProjectById }) => {
   const [openChatResponse, setOpenChatResponse] = useState({});
   const [selectedModel, setSelectedModel] = useState('cohere'); // Default model
   const [isLoading, setIsLoading] = useState({}); // Track loading state for each prompt
+  const [newPromptText, setNewPromptText] = useState(''); // Track the text of the new prompt
 
   const models = [
     { name: 'cohere', apiRequest: cohereApiRequest },
@@ -47,12 +61,15 @@ const ProjectDetails = ({ getProjectById }) => {
     });
   };
 
-  const handleCreatePrompt = async (promptText) => {
+  const handleCreatePrompt = async () => {
     try {
       // Add the prompt to the indexedDB
-      const promptId = await addPrompt({ projectId: project.id, text: promptText });
-      const newPrompt = { id: promptId, projectId: project.id, text: promptText };
+      const promptId = await addPrompt({ projectId: project.id, text: newPromptText });
+      const newPrompt = { id: promptId, projectId: project.id, text: newPromptText };
       setPrompts([...prompts, newPrompt]);
+
+      // Reset the text area
+      setNewPromptText('');
 
     } catch (error) {
       console.error('Error creating prompt:', error.message);
@@ -86,41 +103,64 @@ const ProjectDetails = ({ getProjectById }) => {
 
   return (
     <div>
-      <h2>{project && project.name}</h2>
-      <ModelSelection
-        models={models}
-        selectedModel={selectedModel}
-        onSelectModel={setSelectedModel}
-      />
-      <PromptForm onCreatePrompt={handleCreatePrompt} />
-      {/* Display prompts and model answers in a table */}
-      <table style={{ width: '100%' }}>
-        <thead>
-          <tr>
-            <th>Play</th>
-            <th>Prompt</th>
-            <th>Model Answer</th>
-          </tr>
-        </thead>
-        <tbody>
-          {prompts.map((prompt) => (
-            <tr key={prompt.id}>
-              <td>
-                <button onClick={() => handleGenerateResponse(prompt.text)}>
-                  {isLoading[prompt.text] ? (
-                    <div style={{ width: '24px', height: '24px', border: '2px solid #ccc', borderRadius: '50%', borderTop: '2px solid #3498db', animation: 'spin 1s linear infinite' }}></div>
-                  ) : (
-                    // PlayCircleOutlineIcon for Play button
-                    <PlayCircleOutlineIcon />
-                  )}
-                </button>
-              </td>
-              <td>{prompt.text}</td>
-              <td>{cohereResponse[prompt.text] || openChatResponse[prompt.text] || ''}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} md={4}>
+          <ModelSelection
+            models={models}
+            selectedModel={selectedModel}
+            onSelectModel={setSelectedModel}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            placeholder="Enter your prompt here..."
+            value={newPromptText}
+            onChange={(e) => setNewPromptText(e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleCreatePrompt}
+          >
+            Create Prompt
+          </Button>
+        </Grid>
+      </Grid>
+
+      <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Play</TableCell>
+              <TableCell>Prompt</TableCell>
+              <TableCell>Model Answer</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {prompts.map((prompt) => (
+              <TableRow key={prompt.id}>
+                <TableCell>
+                  <Button
+                    onClick={() => handleGenerateResponse(prompt.text)}
+                    disabled={isLoading[prompt.text]}
+                    startIcon={<PlayCircleOutlineIcon />}
+                  >
+                    {isLoading[prompt.text] ? 'Processing...' : 'Play'}
+                  </Button>
+                </TableCell>
+                <TableCell>{prompt.text}</TableCell>
+                <TableCell>{cohereResponse[prompt.text] || openChatResponse[prompt.text] || ''}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
       {/* Additional details and associations with templates/examples */}
     </div>
   );
