@@ -12,9 +12,9 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography,
 } from '@mui/material';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import ReactMarkdown from 'react-markdown';
 import PromptForm from './PromptForm';
 import { addPrompt, getPromptsByProjectId, addAnswer, getAllAnswersByProjectId } from '../../utils/indexedDB';
 import cohereApiRequest from '../../services/cohereService';
@@ -48,8 +48,8 @@ const ProjectDetails = ({ getProjectById }) => {
 
   const loadPrompts = async (projectId) => {
     const promptsFromDB = await getPromptsByProjectId(projectId);
-    setPrompts(promptsFromDB);
-
+    setPrompts(promptsFromDB.reverse()); // Reverse to display newest prompts on top
+  
     // Load answers from the database if available
     const answersFromDB = await getAllAnswersByProjectId(projectId);
     answersFromDB.forEach((answer) => {
@@ -64,13 +64,16 @@ const ProjectDetails = ({ getProjectById }) => {
   const handleCreatePrompt = async () => {
     try {
       // Add the prompt to the indexedDB
-      const promptId = await addPrompt({ projectId: project.id, text: newPromptText });
-      const newPrompt = { id: promptId, projectId: project.id, text: newPromptText };
-      setPrompts([...prompts, newPrompt]);
-
+      const promptId = await addPrompt({ projectId: project.id, text: newPromptText, model: selectedModel });
+      const newPrompt = { id: promptId, projectId: project.id, text: newPromptText, model: selectedModel };
+      setPrompts([newPrompt, ...prompts]);
+  
       // Reset the text area
       setNewPromptText('');
-
+  
+      // Run the prompt with the selected model
+      await handleGenerateResponse(newPromptText);
+  
     } catch (error) {
       console.error('Error creating prompt:', error.message);
     }
@@ -104,32 +107,36 @@ const ProjectDetails = ({ getProjectById }) => {
   return (
     <div>
       <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} md={4}>
-          <ModelSelection
-            models={models}
-            selectedModel={selectedModel}
-            onSelectModel={setSelectedModel}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            variant="outlined"
-            placeholder="Enter your prompt here..."
-            value={newPromptText}
-            onChange={(e) => setNewPromptText(e.target.value)}
-          />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleCreatePrompt}
-          >
-            Create Prompt
-          </Button>
+        <Grid item xs={12} md={12}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={6}>
+              <ModelSelection
+                models={models}
+                selectedModel={selectedModel}
+                onSelectModel={setSelectedModel}
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                variant="outlined"
+                placeholder="Enter your prompt here..."
+                value={newPromptText}
+                onChange={(e) => setNewPromptText(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleCreatePrompt}
+              >
+                Create Prompt
+              </Button>
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
 
@@ -139,6 +146,7 @@ const ProjectDetails = ({ getProjectById }) => {
             <TableRow>
               <TableCell>Play</TableCell>
               <TableCell>Prompt</TableCell>
+              <TableCell>Model Used</TableCell>
               <TableCell>Model Answer</TableCell>
             </TableRow>
           </TableHead>
@@ -155,7 +163,10 @@ const ProjectDetails = ({ getProjectById }) => {
                   </Button>
                 </TableCell>
                 <TableCell>{prompt.text}</TableCell>
-                <TableCell>{cohereResponse[prompt.text] || openChatResponse[prompt.text] || ''}</TableCell>
+                <TableCell>{prompt.model}</TableCell>
+                <TableCell>
+                  <ReactMarkdown>{cohereResponse[prompt.text] || openChatResponse[prompt.text] || ''}</ReactMarkdown>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

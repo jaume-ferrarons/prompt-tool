@@ -1,29 +1,34 @@
 // src/services/openchatService.js
-const API_URL = 'https://api-inference.huggingface.co/models/openchat/openchat_3.5';
+const BASE_URL = 'https://api-inference.huggingface.co/models/openchat/openchat_3.5';
 
-const openchatApiRequest = async (prompt) => {
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer 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',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputs: `GPT4 Correct User: ${prompt}<|end_of_turn|>GPT4 Correct Assistant:`,
-      }),
-    });
+const getOpenchatResponse = async (inputs) => {
+  const openchatApiKey = localStorage.getItem('openchatApiKey');
 
-    if (!response.ok) {
-      throw new Error('OpenChat API request failed');
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('Error calling OpenChat API:', error.message);
-    throw error;
+  if (!openchatApiKey) {
+    throw new Error('OpenChat API key not found in local storage.');
   }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${openchatApiKey}`,
+  };
+
+  const body = {
+    inputs,
+  };
+
+  const response = await fetch(BASE_URL, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenChat API request failed: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data;
 };
 
-export default openchatApiRequest;
+export default getOpenchatResponse;
