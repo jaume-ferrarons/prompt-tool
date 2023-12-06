@@ -1,6 +1,6 @@
 // src/components/project/ProjectList.js
 import React from 'react';
-import { List, ListItem, ListItemText, Typography, Link } from '@mui/material';
+import { ListItem, ListItemText, Typography, Link } from '@mui/material';
 import { ListContainer, ListItemLink } from './ProjectList.styles';
 
 const ProjectList = ({ projects }) => {

@@ -5,7 +5,6 @@ import Layout from './components/common/Layout';
 import ProjectList from './components/project/ProjectList';
 import ProjectForm from './components/project/ProjectForm';
 import ProjectDetails from './components/project/ProjectDetails';
-import PromptForm from './components/project/PromptForm';
 import { addProject, getAllProjects, getProjectById } from './utils/indexedDB';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
@@ -27,11 +26,6 @@ function App() {
     const projectId = await addProject(projectData);
     const newProject = { id: projectId, ...projectData };
     setProjects([...projects, newProject]);
-  };
-
-  const handleSelectProject = (projectId) => {
-    // Implement navigation or route to project details page
-    console.log(`Selected project: ${projectId}`);
   };
 
   return (
