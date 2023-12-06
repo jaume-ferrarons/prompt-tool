@@ -1,23 +1,26 @@
 // src/components/project/ProjectDetails.js
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, CircularProgress, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
+import { Button, CircularProgress, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import { addPrompt, getPromptsByProjectId, addAnswer } from '../../utils/indexedDB';
 import cohereApiRequest from '../../services/cohereService';
 import openchatApiRequest from '../../services/openchatService';
 import ModelSelection from './ModelSelection';
 import ReplayIcon from '@mui/icons-material/Replay';
+import CodeIcon from '@mui/icons-material/Code';
+import PromptField from './PromptField';
 
 const ProjectDetails = ({ getProjectById }) => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
-  const [prompts, setPrompts] = useState([]);
-  const [newPromptText, setNewPromptText] = useState('');
-  const [selectedModel, setSelectedModel] = useState('cohere'); // Default model
-  const [isLoading, setIsLoading] = useState({}); // Track loading state for each prompt
+  const [prompts, setPrompts] = useState([]); // Define prompts state
+  const [showRawAnswer, setShowRawAnswer] = useState(false); // Define prompts state
+  const [newPromptText, setNewPromptText] = useState(''); // Define newPromptText state
+  const [selectedModel, setSelectedModel] = useState('cohere'); // Define selectedModel state
+  const [isLoading, setIsLoading] = useState({});
   const stateRef = useRef();
-  stateRef.prompts = prompts
+  stateRef.prompts = prompts;
 
   const models = [
     { name: 'cohere', apiRequest: cohereApiRequest },
@@ -41,7 +44,6 @@ const ProjectDetails = ({ getProjectById }) => {
 
   const handleCreatePrompt = async () => {
     try {
-
       // Add the prompt to the indexedDB with computed answer
       const promptId = await addPrompt({
         projectId: project.id,
@@ -60,9 +62,6 @@ const ProjectDetails = ({ getProjectById }) => {
       // Add the new prompt to the state immediately
       setPrompts([newPrompt, ...stateRef.prompts]);
 
-      // Reset the text area
-      // setNewPromptText('');
-
       // Compute and update the answer
       computePromptAnswer(newPrompt);
     } catch (error) {
@@ -80,13 +79,9 @@ const ProjectDetails = ({ getProjectById }) => {
       const modelResponse = await model.apiRequest(prompt.text);
 
       // Update state based on the selected model
-      console.log({"len before": prompts.length})
       const updatedPrompts = stateRef.prompts.map((prevPrompt) =>
-      prevPrompt.id === prompt.id ? { ...prevPrompt, answer: modelResponse } : prevPrompt
+        prevPrompt.id === prompt.id ? { ...prevPrompt, answer: modelResponse } : prevPrompt
       );
-      console.log(prompts);
-      console.log(updatedPrompts);
-      console.log({"len before": prompts.length, "len after": updatedPrompts.length})
       setPrompts(updatedPrompts);
 
       // Add the answer to the indexedDB for future reference
@@ -116,28 +111,18 @@ const ProjectDetails = ({ getProjectById }) => {
 
   return (
     <div>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} md={12}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={6}>
-              <ModelSelection models={models} selectedModel={selectedModel} onSelectModel={setSelectedModel} />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                variant="outlined"
-                placeholder="Enter your prompt here..."
-                value={newPromptText}
-                onChange={(e) => setNewPromptText(e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={2}>
-              <Button variant="contained" color="primary" onClick={handleCreatePrompt}>
-                Create Prompt
-              </Button>
-            </Grid>
+      <Grid container spacing={2} alignItems="flex-end">
+        <Grid item xs={12} md={10}>
+            <PromptField
+              onChange={(updatedPrompt) => setNewPromptText(updatedPrompt)}
+            />
+        </Grid>
+        <Grid item xs={12} md={2}>
+          <Grid spacing={2} justifyContent="center" alignItems="center" container direction="column">
+            <ModelSelection models={models} selectedModel={selectedModel} onSelectModel={setSelectedModel} />
+            <Button variant="contained" color="primary" onClick={handleCreatePrompt} fullWidth>
+              Execute Prompt
+            </Button>
           </Grid>
         </Grid>
       </Grid>
@@ -148,17 +133,30 @@ const ProjectDetails = ({ getProjectById }) => {
             <TableRow>
               <TableCell>Prompt</TableCell>
               <TableCell>Model</TableCell>
-              <TableCell>Answer</TableCell>
+              <TableCell>
+                Answer
+                <ToggleButton
+                  value="check"
+                  selected={showRawAnswer}
+                  onChange={() => {
+                    setShowRawAnswer(!showRawAnswer);
+                  }}
+                >
+                  <CodeIcon />
+                </ToggleButton>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {prompts.map((prompt) => (
               <TableRow key={prompt.id}>
-                <TableCell>{prompt.text}</TableCell>
+                <TableCell><pre>{prompt.text}</pre></TableCell>
                 <TableCell>{prompt.model}</TableCell>
                 <TableCell>
                   {prompt.answer !== null ? (
-                    <ReactMarkdown>{prompt.answer || ''}</ReactMarkdown>
+                    <>
+                      {showRawAnswer ? <pre>{prompt.answer || ''}</pre> : <ReactMarkdown>{prompt.answer || ''}</ReactMarkdown>}
+                    </>
                   ) : (
                     <>
                       {isLoading[prompt.id] ? (
