@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, CircularProgress, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'
 import { addPrompt, getPromptsByProjectId, addAnswer } from '../../utils/indexedDB';
 import cohereApiRequest from '../../services/cohereService';
 import openchatApiRequest from '../../services/openchatService';
@@ -113,9 +114,9 @@ const ProjectDetails = ({ getProjectById }) => {
     <div>
       <Grid container spacing={2} alignItems="flex-end">
         <Grid item xs={12} md={10}>
-            <PromptField
-              onChange={(updatedPrompt) => setNewPromptText(updatedPrompt)}
-            />
+          <PromptField
+            onChange={(updatedPrompt) => setNewPromptText(updatedPrompt)}
+          />
         </Grid>
         <Grid item xs={12} md={2}>
           <Grid spacing={2} justifyContent="center" alignItems="center" container direction="column">
@@ -155,7 +156,7 @@ const ProjectDetails = ({ getProjectById }) => {
                 <TableCell>
                   {prompt.answer !== null ? (
                     <>
-                      {showRawAnswer ? <pre>{prompt.answer || ''}</pre> : <ReactMarkdown>{prompt.answer || ''}</ReactMarkdown>}
+                      {showRawAnswer ? <pre>{prompt.answer || ''}</pre> : <ReactMarkdown remarkPlugins={[remarkGfm]}>{prompt.answer || ''}</ReactMarkdown>}
                     </>
                   ) : (
                     <>
