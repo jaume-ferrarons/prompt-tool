@@ -1,35 +1,23 @@
 // src/components/project/ProjectDetails.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-  Button,
-  Grid,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-} from '@mui/material';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import { Button, CircularProgress, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
-import PromptForm from './PromptForm';
-import { addPrompt, getPromptsByProjectId, addAnswer, getAllAnswersByProjectId } from '../../utils/indexedDB';
+import { addPrompt, getPromptsByProjectId, addAnswer } from '../../utils/indexedDB';
 import cohereApiRequest from '../../services/cohereService';
 import openchatApiRequest from '../../services/openchatService';
 import ModelSelection from './ModelSelection';
+import ReplayIcon from '@mui/icons-material/Replay';
 
 const ProjectDetails = ({ getProjectById }) => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
   const [prompts, setPrompts] = useState([]);
-  const [cohereResponse, setCohereResponse] = useState({});
-  const [openChatResponse, setOpenChatResponse] = useState({});
+  const [newPromptText, setNewPromptText] = useState('');
   const [selectedModel, setSelectedModel] = useState('cohere'); // Default model
   const [isLoading, setIsLoading] = useState({}); // Track loading state for each prompt
-  const [newPromptText, setNewPromptText] = useState(''); // Track the text of the new prompt
+  const stateRef = useRef();
+  stateRef.prompts = prompts
 
   const models = [
     { name: 'cohere', apiRequest: cohereApiRequest },
@@ -49,58 +37,80 @@ const ProjectDetails = ({ getProjectById }) => {
   const loadPrompts = async (projectId) => {
     const promptsFromDB = await getPromptsByProjectId(projectId);
     setPrompts(promptsFromDB.reverse()); // Reverse to display newest prompts on top
-  
-    // Load answers from the database if available
-    const answersFromDB = await getAllAnswersByProjectId(projectId);
-    answersFromDB.forEach((answer) => {
-      if (answer.model === 'cohere') {
-        setCohereResponse((prevResponse) => ({ ...prevResponse, [answer.promptText]: answer.answer }));
-      } else if (answer.model === 'openchat') {
-        setOpenChatResponse((prevResponse) => ({ ...prevResponse, [answer.promptText]: answer.answer }));
-      }
-    });
   };
 
   const handleCreatePrompt = async () => {
     try {
-      // Add the prompt to the indexedDB
-      const promptId = await addPrompt({ projectId: project.id, text: newPromptText, model: selectedModel });
-      const newPrompt = { id: promptId, projectId: project.id, text: newPromptText, model: selectedModel };
-      setPrompts([newPrompt, ...prompts]);
-  
+
+      // Add the prompt to the indexedDB with computed answer
+      const promptId = await addPrompt({
+        projectId: project.id,
+        text: newPromptText,
+        model: selectedModel,
+      });
+
+      const newPrompt = {
+        id: promptId,
+        projectId: project.id,
+        text: newPromptText,
+        model: selectedModel,
+        answer: null, // Set to null initially, will be updated after computation
+      };
+
+      // Add the new prompt to the state immediately
+      setPrompts([newPrompt, ...stateRef.prompts]);
+
       // Reset the text area
-      setNewPromptText('');
-  
-      // Run the prompt with the selected model
-      await handleGenerateResponse(newPromptText);
-  
+      // setNewPromptText('');
+
+      // Compute and update the answer
+      computePromptAnswer(newPrompt);
     } catch (error) {
       console.error('Error creating prompt:', error.message);
     }
   };
 
-  const handleGenerateResponse = async (promptText) => {
+  const computePromptAnswer = async (prompt) => {
     try {
-      setIsLoading((prevLoading) => ({ ...prevLoading, [promptText]: true }));
+      const model = models.find((m) => m.name === prompt.model);
+
+      setIsLoading((prevLoading) => ({ ...prevLoading, [prompt.id]: true }));
 
       // Call the selected model
-      const model = models.find((m) => m.name === selectedModel);
-      const modelResponse = await model.apiRequest(promptText);
+      const modelResponse = await model.apiRequest(prompt.text);
 
       // Update state based on the selected model
-      if (selectedModel === 'cohere') {
-        setCohereResponse((prevResponse) => ({ ...prevResponse, [promptText]: modelResponse }));
-      } else if (selectedModel === 'openchat') {
-        setOpenChatResponse((prevResponse) => ({ ...prevResponse, [promptText]: modelResponse }));
-      }
+      console.log({"len before": prompts.length})
+      const updatedPrompts = stateRef.prompts.map((prevPrompt) =>
+      prevPrompt.id === prompt.id ? { ...prevPrompt, answer: modelResponse } : prevPrompt
+      );
+      console.log(prompts);
+      console.log(updatedPrompts);
+      console.log({"len before": prompts.length, "len after": updatedPrompts.length})
+      setPrompts(updatedPrompts);
 
       // Add the answer to the indexedDB for future reference
-      await addAnswer({ projectId: project.id, model: selectedModel, promptText, answer: modelResponse });
-
+      await addAnswer({
+        projectId: project.id,
+        model: prompt.model,
+        promptId: prompt.id,
+        answer: modelResponse,
+        text: prompt.text,
+      });
     } catch (error) {
-      console.error('Error generating response:', error.message);
+      console.error('Error computing prompt answer:', error.message);
     } finally {
-      setIsLoading((prevLoading) => ({ ...prevLoading, [promptText]: false }));
+      setIsLoading((prevLoading) => ({ ...prevLoading, [prompt.id]: false }));
+    }
+  };
+
+  const handleReprocessPrompt = (prompt) => {
+    // Check if the prompt is currently being processed
+    const isProcessing = isLoading[prompt.id];
+
+    if (!isProcessing) {
+      // Reprocess the prompt and update the answer
+      computePromptAnswer(prompt);
     }
   };
 
@@ -110,11 +120,7 @@ const ProjectDetails = ({ getProjectById }) => {
         <Grid item xs={12} md={12}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={6}>
-              <ModelSelection
-                models={models}
-                selectedModel={selectedModel}
-                onSelectModel={setSelectedModel}
-              />
+              <ModelSelection models={models} selectedModel={selectedModel} onSelectModel={setSelectedModel} />
             </Grid>
             <Grid item xs={4}>
               <TextField
@@ -128,11 +134,7 @@ const ProjectDetails = ({ getProjectById }) => {
               />
             </Grid>
             <Grid item xs={2}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleCreatePrompt}
-              >
+              <Button variant="contained" color="primary" onClick={handleCreatePrompt}>
                 Create Prompt
               </Button>
             </Grid>
@@ -144,28 +146,34 @@ const ProjectDetails = ({ getProjectById }) => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Play</TableCell>
               <TableCell>Prompt</TableCell>
-              <TableCell>Model Used</TableCell>
-              <TableCell>Model Answer</TableCell>
+              <TableCell>Model</TableCell>
+              <TableCell>Answer</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {prompts.map((prompt) => (
               <TableRow key={prompt.id}>
-                <TableCell>
-                  <Button
-                    onClick={() => handleGenerateResponse(prompt.text)}
-                    disabled={isLoading[prompt.text]}
-                    startIcon={<PlayCircleOutlineIcon />}
-                  >
-                    {isLoading[prompt.text] ? 'Processing...' : 'Play'}
-                  </Button>
-                </TableCell>
                 <TableCell>{prompt.text}</TableCell>
                 <TableCell>{prompt.model}</TableCell>
                 <TableCell>
-                  <ReactMarkdown>{cohereResponse[prompt.text] || openChatResponse[prompt.text] || ''}</ReactMarkdown>
+                  {prompt.answer !== null ? (
+                    <ReactMarkdown>{prompt.answer || ''}</ReactMarkdown>
+                  ) : (
+                    <>
+                      {isLoading[prompt.id] ? (
+                        <CircularProgress size={24} sx={{ marginRight: 2 }} />
+                      ) : (
+                        <Button
+                          onClick={() => handleReprocessPrompt(prompt)}
+                          startIcon={<ReplayIcon />}
+                          disabled={isLoading[prompt.id]}
+                        >
+                          Reprocess
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

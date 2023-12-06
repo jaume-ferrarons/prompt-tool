@@ -3,10 +3,9 @@ import Dexie from 'dexie';
 
 const db = new Dexie('AI_Tool_DB');
 
-db.version(4).stores({
+db.version(7).stores({
     projects: '++id,name',
-    prompts: '++id,projectId,text',
-    answers: '++id,projectId,model,promptId,answer,promptText',
+    prompts: '++id,projectId,text,model,answer', // Merged prompts and answers
 });
 
 export const addProject = async (project) => {
@@ -22,7 +21,6 @@ export const getProjectById = async (projectId) => {
     return db.projects.get(projectId);
 };
 
-
 export const addPrompt = async (prompt) => {
     const promptId = await db.prompts.add(prompt);
     return promptId;
@@ -33,9 +31,15 @@ export const getPromptsByProjectId = async (projectId) => {
 };
 
 export const addAnswer = async (answerData) => {
-    return await db.answers.add(answerData);
-  };
-  
-  export const getAllAnswersByProjectId = async (projectId) => {
-    return await db.answers.where('projectId').equals(projectId).toArray();
-  };
+    const { projectId, model, promptId } = answerData;
+
+    // Check if the record already exists
+    const existingRecord = await db.prompts.get({ projectId, model, id: promptId });
+
+    // If the record exists, update it; otherwise, add a new one
+    if (existingRecord) {
+        await db.prompts.update(existingRecord.id, answerData);
+    } else {
+        await db.prompts.add(answerData);
+    }
+};
