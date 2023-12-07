@@ -1,6 +1,6 @@
 // src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { HashRouter as Router, Route, Routes } from 'react-router-dom';
 import Layout from './components/common/Layout';
 import ProjectList from './components/project/ProjectList';
 import ProjectForm from './components/project/ProjectForm';
@@ -30,9 +30,9 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Router basename='/prompt-tool'>
+      <Router>
         <Layout>
-          <Routes>
+          <Routes basename='/prompt-tool'>
             <Route path="/" exact element={
               <>
                 <ProjectList projects={projects} />
