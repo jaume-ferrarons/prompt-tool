@@ -30,7 +30,7 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Router>
+      <Router basename='/prompt-tool'>
         <Layout>
           <Routes>
             <Route path="/" exact element={

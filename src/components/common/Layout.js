@@ -37,7 +37,7 @@ const Layout = ({ children }) => {
     setSelectedProject(projectId);
 
     // Update the URL
-    navigate(`/projects/${projectId}`);
+    navigate(`/prompt-tool/projects/${projectId}`);
   };
 
   const handleApiKeyDialogOpen = () => {
