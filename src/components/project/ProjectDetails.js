@@ -1,16 +1,14 @@
 // src/components/project/ProjectDetails.js
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, CircularProgress, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton } from '@mui/material';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm'
+import { Button, CircularProgress, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { addPrompt, getPromptsByProjectId, addAnswer } from '../../utils/indexedDB';
 import cohereApiRequest from '../../services/cohereService';
 import openchatApiRequest from '../../services/openchatService';
 import ModelSelection from './ModelSelection';
 import ReplayIcon from '@mui/icons-material/Replay';
-import CodeIcon from '@mui/icons-material/Code';
 import PromptField from './PromptField';
+import Answer from '../prompt/answer.js';
 
 const ProjectDetails = ({ getProjectById }) => {
   const { projectId } = useParams();
@@ -50,6 +48,7 @@ const ProjectDetails = ({ getProjectById }) => {
         projectId: project.id,
         text: newPromptText,
         model: selectedModel,
+        answer: null,
       });
 
       const newPrompt = {
@@ -78,6 +77,7 @@ const ProjectDetails = ({ getProjectById }) => {
 
       // Call the selected model
       const modelResponse = await model.apiRequest(prompt.text);
+      console.log(modelResponse);
 
       // Update state based on the selected model
       const updatedPrompts = stateRef.prompts.map((prevPrompt) =>
@@ -129,22 +129,24 @@ const ProjectDetails = ({ getProjectById }) => {
       </Grid>
 
       <TableContainer component={Paper} sx={{ marginTop: 2 }}>
-        <Table>
+        <Table stickyHeader>
           <TableHead>
             <TableRow>
               <TableCell>Prompt</TableCell>
               <TableCell>Model</TableCell>
               <TableCell>
                 Answer
-                <ToggleButton
-                  value="check"
-                  selected={showRawAnswer}
-                  onChange={() => {
-                    setShowRawAnswer(!showRawAnswer);
-                  }}
+                <ToggleButtonGroup
+                  size='small'
+                  color="primary"
+                  value={showRawAnswer}
+                  exclusive
+                  onChange={event => setShowRawAnswer(event.target.value === "true")}
+                  sx={{ "paddingLeft": "15px" }}
                 >
-                  <CodeIcon />
-                </ToggleButton>
+                  <ToggleButton value={false}>Markdown</ToggleButton>
+                  <ToggleButton value={true}>Raw</ToggleButton>
+                </ToggleButtonGroup>
               </TableCell>
             </TableRow>
           </TableHead>
@@ -154,25 +156,24 @@ const ProjectDetails = ({ getProjectById }) => {
                 <TableCell><pre>{prompt.text}</pre></TableCell>
                 <TableCell>{prompt.model}</TableCell>
                 <TableCell>
-                  {prompt.answer !== null ? (
-                    <>
-                      {showRawAnswer ? <pre>{prompt.answer || ''}</pre> : <ReactMarkdown remarkPlugins={[remarkGfm]}>{prompt.answer || ''}</ReactMarkdown>}
-                    </>
-                  ) : (
-                    <>
-                      {isLoading[prompt.id] ? (
-                        <CircularProgress size={24} sx={{ marginRight: 2 }} />
-                      ) : (
-                        <Button
+
+                  <>
+                    {isLoading[prompt.id] || prompt.answer === null ? (
+                      <CircularProgress size={24} sx={{ marginRight: 2 }} />
+                    ) : (
+                      <>
+                        <Answer answer={prompt.answer} showRaw={showRawAnswer} />
+                        {prompt.answer["status"] !== 200 && <Button
                           onClick={() => handleReprocessPrompt(prompt)}
                           startIcon={<ReplayIcon />}
                           disabled={isLoading[prompt.id]}
                         >
-                          Reprocess
-                        </Button>
-                      )}
-                    </>
-                  )}
+                          Retry
+                        </Button>}
+
+                      </>
+                    )}
+                  </>
                 </TableCell>
               </TableRow>
             ))}

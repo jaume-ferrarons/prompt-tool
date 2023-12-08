@@ -1,4 +1,7 @@
 // src/services/cohereService.js
+
+import { buildAnswer } from './aiServiceCommon';
+
 const BASE_URL = 'https://api.cohere.ai/v1/chat';
 
 const getCohereResponse = async (prompt) => {
@@ -31,12 +34,8 @@ const getCohereResponse = async (prompt) => {
     body: JSON.stringify(body),
   });
 
-  if (!response.ok) {
-    throw new Error(`Cohere API request failed: ${response.statusText}`);
-  }
-
   const data = await response.json();
-  return data["text"];
+  return buildAnswer(response.status, data);
 };
 
 export default getCohereResponse;

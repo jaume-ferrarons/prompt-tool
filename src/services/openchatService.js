@@ -1,4 +1,7 @@
 // src/services/openchatService.js
+
+import { buildAnswer } from './aiServiceCommon';
+
 const BASE_URL = 'https://api-inference.huggingface.co/models/openchat/openchat_3.5';
 
 const getOpenchatResponse = async (inputs) => {
@@ -23,12 +26,8 @@ const getOpenchatResponse = async (inputs) => {
     body: JSON.stringify(body),
   });
 
-  if (!response.ok) {
-    throw new Error(`OpenChat API request failed: ${response.statusText}`);
-  }
-
   const data = await response.json();
-  return data;
+  return buildAnswer(response.status, data);
 };
 
 export default getOpenchatResponse;
