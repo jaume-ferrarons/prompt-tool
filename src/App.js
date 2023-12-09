@@ -31,21 +31,21 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <Router>
-        <Layout>
-          <Routes basename='/prompt-tool'>
-            <Route path="/" exact element={
-              <>
-                <ProjectList projects={projects} />
-                <ProjectForm onCreateProject={handleCreateProject} />
-              </>
-            }>
-            </Route>
-            <Route path="/projects/:projectId" element={
+        <Routes basename='/prompt-tool'>
+          <Route path="/" exact element={
+            <Layout>
+              <ProjectList projects={projects} />
+              <ProjectForm onCreateProject={handleCreateProject} />
+            </Layout>
+          }>
+          </Route>
+          <Route path="/projects/:projectId" element={
+            <Layout>
               <ProjectDetails getProjectById={getProjectById} />
-            }>
-            </Route>
-          </Routes>
-        </Layout>
+            </Layout>
+          }>
+          </Route>
+        </Routes>
       </Router>
     </ThemeProvider>
   );

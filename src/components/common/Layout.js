@@ -1,43 +1,50 @@
 // src/components/common/Layout.js
 import React, { useState, useEffect } from 'react';
-import {
-  AppBar,
-  Toolbar,
-  Select,
-  MenuItem,
-  Button,
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { getAllProjects } from '../../utils/indexedDB'; // Adjust the path as needed
+import { AppBar, Toolbar, Select, MenuItem, Button } from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getAllProjects, addProject } from '../../utils/indexedDB';
 import ApiKeyDialog from './ApiKeyDialog';
+import CreateProjectDialog from './CreateProjectDialog';
 
 const Layout = ({ children }) => {
+  const { projectId } = useParams();
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState('');
   const [openApiKeyDialog, setOpenApiKeyDialog] = useState(false);
+  const [openCreateProjectDialog, setOpenCreateProjectDialog] = useState(false);
+  const [existingProjectNames, setExistingProjectNames] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const projectsFromDB = await getAllProjects();
+        const projectNames = projectsFromDB.map((project) => project.name);
         setProjects(projectsFromDB);
+        setExistingProjectNames(projectNames);
         setSelectedProject(projectsFromDB.length > 0 ? projectsFromDB[0].id : '');
 
+        console.log({ projectId });
+
+        // If projectId is not in the URL or doesn't exist, default to the first project
+        setSelectedProject(projectId || (projectsFromDB.length > 0 ? projectsFromDB[0].id : ''));
       } catch (error) {
         console.error('Error fetching projects:', error.message);
       }
     };
 
     fetchProjects();
-  }, []);
+  }, [projectId]);
 
   const handleProjectChange = (event) => {
     const projectId = event.target.value;
-    setSelectedProject(projectId);
+    console.log({projectId})
+    if (projectId !== null) {
+      setSelectedProject(projectId);
 
-    // Update the URL
-    navigate(`/prompt-tool/projects/${projectId}`);
+      // Update the URL
+      navigate(`/projects/${projectId}`);
+    }
   };
 
   const handleApiKeyDialogOpen = () => {
@@ -57,29 +64,61 @@ const Layout = ({ children }) => {
     setOpenApiKeyDialog(false);
   };
 
+  const handleCreateProjectDialogOpen = () => {
+    setOpenCreateProjectDialog(true);
+  };
+
+  const handleCreateProjectDialogClose = () => {
+    setOpenCreateProjectDialog(false);
+  };
+
+  const handleCreateProject = async (projectData) => {
+    console.log("handleCreateProject")
+    try {
+      const projectId = await addProject(projectData);
+      const newProject = { id: projectId, ...projectData };
+      setProjects([...projects, newProject]);
+      setExistingProjectNames([...existingProjectNames, projectData.name]);
+
+      navigate(`/projects/${projectId}`);
+
+    } catch (error) {
+      console.error('Error creating project:', error.message);
+    } finally {
+      setOpenCreateProjectDialog(false);
+    }
+  };
+
   return (
     <div>
       <AppBar position="static">
         <Toolbar>
-          {/* Your logo can be placed here */}
           <Select
             value={selectedProject}
             onChange={handleProjectChange}
             displayEmpty
             inputProps={{ 'aria-label': 'Without label' }}
             sx={{
-              fontSize: '1.2rem', // Adjust the font size as needed
-              color: 'white',    // Text color
+              fontSize: '1.2rem',
+              color: 'white',
               '& .MuiSelect-icon': {
-                color: 'white',   // Arrow color
+                color: 'white',
               },
             }}
           >
+            {projects.length === 0 && (
+              <MenuItem value="" disabled>
+                Select a project
+              </MenuItem>
+            )}
             {projects.map((project) => (
               <MenuItem key={project.id} value={project.id}>
                 {project.name}
               </MenuItem>
             ))}
+            <MenuItem value={null} onClick={handleCreateProjectDialogOpen}>
+              Create new project
+            </MenuItem>
           </Select>
 
           <Button color="inherit" onClick={handleApiKeyDialogOpen}>
@@ -92,6 +131,13 @@ const Layout = ({ children }) => {
         open={openApiKeyDialog}
         onClose={handleApiKeyDialogClose}
         onSave={handleSaveApiKeys}
+      />
+
+      <CreateProjectDialog
+        open={openCreateProjectDialog}
+        onClose={handleCreateProjectDialogClose}
+        onCreateProject={handleCreateProject}
+        existingProjectNames={existingProjectNames}
       />
 
       {children}
