@@ -60,7 +60,9 @@ const PromptField = ({ onChange }) => {
                 <TableCell>
                   <TextField
                     fullWidth
+                    multiline
                     variant="outlined"
+                    label={param}
                     placeholder={`Enter value for ${param}`}
                     onChange={(e) => handleParameterChange(param, e.target.value)}
                   />

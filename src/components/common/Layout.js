@@ -22,12 +22,8 @@ const Layout = ({ children }) => {
         const projectNames = projectsFromDB.map((project) => project.name);
         setProjects(projectsFromDB);
         setExistingProjectNames(projectNames);
-        setSelectedProject(projectsFromDB.length > 0 ? projectsFromDB[0].id : '');
 
-        console.log({ projectId });
-
-        // If projectId is not in the URL or doesn't exist, default to the first project
-        setSelectedProject(projectId || (projectsFromDB.length > 0 ? projectsFromDB[0].id : ''));
+        setSelectedProject(projectId || '');
       } catch (error) {
         console.error('Error fetching projects:', error.message);
       }
@@ -89,6 +85,7 @@ const Layout = ({ children }) => {
     }
   };
 
+  console.log({projectId, selectedProject})
   return (
     <div>
       <AppBar position="static">
@@ -106,7 +103,7 @@ const Layout = ({ children }) => {
               },
             }}
           >
-            {projects.length === 0 && (
+            {projectId === undefined && (
               <MenuItem value="" disabled>
                 Select a project
               </MenuItem>

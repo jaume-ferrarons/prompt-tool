@@ -156,24 +156,17 @@ const ProjectDetails = ({ getProjectById }) => {
                 <TableCell><pre>{prompt.text}</pre></TableCell>
                 <TableCell>{prompt.model}</TableCell>
                 <TableCell>
-
-                  <>
-                    {isLoading[prompt.id] || prompt.answer === null ? (
+                    {isLoading[prompt.id] ? (
                       <CircularProgress size={24} sx={{ marginRight: 2 }} />
-                    ) : (
-                      <>
-                        <Answer answer={prompt.answer} showRaw={showRawAnswer} />
-                        {prompt.answer["status"] !== 200 && <Button
-                          onClick={() => handleReprocessPrompt(prompt)}
-                          startIcon={<ReplayIcon />}
-                          disabled={isLoading[prompt.id]}
-                        >
-                          Retry
-                        </Button>}
-
-                      </>
-                    )}
-                  </>
+                    ) : ( <Answer answer={prompt.answer} showRaw={showRawAnswer} />)}
+                        
+                    {!isLoading[prompt.id] && (prompt.answer == null || prompt.answer["status"] !== 200) && <Button
+                      onClick={() => handleReprocessPrompt(prompt)}
+                      startIcon={<ReplayIcon />}
+                      disabled={isLoading[prompt.id]}
+                    >
+                      Retry
+                    </Button>}
                 </TableCell>
               </TableRow>
             ))}
