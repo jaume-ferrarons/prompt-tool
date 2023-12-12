@@ -4,7 +4,7 @@ import { buildAnswer } from './aiServiceCommon';
 
 const BASE_URL = 'https://api.cohere.ai/v1/chat';
 
-const getCohereResponse = async (prompt) => {
+const getCohereResponse = async (prompt, parameters) => {
   const cohereApiKey = localStorage.getItem('cohereApiKey');
 
   if (!cohereApiKey) {
@@ -26,6 +26,7 @@ const getCohereResponse = async (prompt) => {
     citation_quality: 'accurate',
     connectors: [],
     documents: [],
+    ...parameters
   };
 
   const response = await fetch(BASE_URL, {

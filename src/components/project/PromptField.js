@@ -83,7 +83,6 @@ const PromptField = ({ onChange }) => {
         <TextField
           fullWidth
           multiline
-          rows={3}
           variant="outlined"
           placeholder="Enter your prompt here..."
           value={newPromptText}

@@ -34,7 +34,6 @@ const Layout = ({ children }) => {
 
   const handleProjectChange = (event) => {
     const projectId = event.target.value;
-    console.log({projectId})
     if (projectId !== null) {
       setSelectedProject(projectId);
 
@@ -69,7 +68,6 @@ const Layout = ({ children }) => {
   };
 
   const handleCreateProject = async (projectData) => {
-    console.log("handleCreateProject")
     try {
       const projectId = await addProject(projectData);
       const newProject = { id: projectId, ...projectData };
@@ -85,7 +83,6 @@ const Layout = ({ children }) => {
     }
   };
 
-  console.log({projectId, selectedProject})
   return (
     <div>
       <AppBar position="static">

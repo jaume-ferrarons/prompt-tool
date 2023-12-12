@@ -4,7 +4,7 @@ import { buildAnswer } from './aiServiceCommon';
 
 const BASE_URL = 'https://api-inference.huggingface.co/models/openchat/openchat_3.5';
 
-const getOpenchatResponse = async (inputs) => {
+const getOpenchatResponse = async (inputs, parameters) => {
   const openchatApiKey = localStorage.getItem('openchatApiKey');
 
   if (!openchatApiKey) {
@@ -17,7 +17,8 @@ const getOpenchatResponse = async (inputs) => {
   };
 
   const body = {
-    inputs,
+    inputs: `GPT4 Correct User: ${inputs}<|end_of_turn|>GPT4 Correct Assistant:`,
+    parameters: parameters
   };
 
   const response = await fetch(BASE_URL, {

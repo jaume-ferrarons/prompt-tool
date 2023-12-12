@@ -1,14 +1,17 @@
 // src/components/project/ProjectDetails.js
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, CircularProgress, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import {
+  Button, CircularProgress, Grid, Paper, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow,
+  ToggleButton, ToggleButtonGroup
+} from '@mui/material';
 import { addPrompt, getPromptsByProjectId, addAnswer } from '../../utils/indexedDB';
-import cohereApiRequest from '../../services/cohereService';
-import openchatApiRequest from '../../services/openchatService';
 import ModelSelection from './ModelSelection';
 import ReplayIcon from '@mui/icons-material/Replay';
 import PromptField from './PromptField';
 import Answer from '../prompt/answer.js';
+import { models } from '../../services/modelRegistry.js';
 
 const ProjectDetails = ({ getProjectById }) => {
   const { projectId } = useParams();
@@ -16,15 +19,10 @@ const ProjectDetails = ({ getProjectById }) => {
   const [prompts, setPrompts] = useState([]); // Define prompts state
   const [showRawAnswer, setShowRawAnswer] = useState(false); // Define prompts state
   const [newPromptText, setNewPromptText] = useState(''); // Define newPromptText state
-  const [selectedModel, setSelectedModel] = useState('cohere'); // Define selectedModel state
+  const [selectedModel, setSelectedModel] = useState({ "model": "cohere" }); // Define selectedModel state
   const [isLoading, setIsLoading] = useState({});
   const stateRef = useRef();
   stateRef.prompts = prompts;
-
-  const models = [
-    { name: 'cohere', apiRequest: cohereApiRequest },
-    { name: 'openchat', apiRequest: openchatApiRequest },
-  ];
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -71,13 +69,12 @@ const ProjectDetails = ({ getProjectById }) => {
 
   const computePromptAnswer = async (prompt) => {
     try {
-      const model = models.find((m) => m.name === prompt.model);
+      const model = models[prompt["model"]["model"]];
 
       setIsLoading((prevLoading) => ({ ...prevLoading, [prompt.id]: true }));
 
       // Call the selected model
-      const modelResponse = await model.apiRequest(prompt.text);
-      console.log(modelResponse);
+      const modelResponse = await model.apiRequest(prompt.text, prompt["model"]["parameters"]);
 
       // Update state based on the selected model
       const updatedPrompts = stateRef.prompts.map((prevPrompt) =>
@@ -112,6 +109,8 @@ const ProjectDetails = ({ getProjectById }) => {
 
   return (
     <div>
+      <ModelSelection onSelectModel={setSelectedModel} />
+
       <Grid container spacing={2} alignItems="flex-end">
         <Grid item xs={12} md={10}>
           <PromptField
@@ -120,8 +119,7 @@ const ProjectDetails = ({ getProjectById }) => {
         </Grid>
         <Grid item xs={12} md={2}>
           <Grid spacing={2} justifyContent="center" alignItems="center" container direction="column">
-            <ModelSelection models={models} selectedModel={selectedModel} onSelectModel={setSelectedModel} />
-            <Button variant="contained" color="primary" onClick={handleCreatePrompt} fullWidth>
+            <Button variant="contained" color="primary" onClick={handleCreatePrompt} size="small" fullWidth>
               Execute Prompt
             </Button>
           </Grid>
@@ -153,20 +151,20 @@ const ProjectDetails = ({ getProjectById }) => {
           <TableBody>
             {prompts.map((prompt) => (
               <TableRow key={prompt.id}>
-                <TableCell><pre>{prompt.text}</pre></TableCell>
-                <TableCell>{prompt.model}</TableCell>
+                <TableCell><pre style={{ "whiteSpace": "pre-wrap" }}>{prompt.text}</pre></TableCell>
+                <TableCell>{models[prompt.model["model"]].displayName}</TableCell>
                 <TableCell>
-                    {isLoading[prompt.id] ? (
-                      <CircularProgress size={24} sx={{ marginRight: 2 }} />
-                    ) : ( <Answer answer={prompt.answer} showRaw={showRawAnswer} />)}
-                        
-                    {!isLoading[prompt.id] && (prompt.answer == null || prompt.answer["status"] !== 200) && <Button
-                      onClick={() => handleReprocessPrompt(prompt)}
-                      startIcon={<ReplayIcon />}
-                      disabled={isLoading[prompt.id]}
-                    >
-                      Retry
-                    </Button>}
+                  {isLoading[prompt.id] ? (
+                    <CircularProgress size={24} sx={{ marginRight: 2 }} />
+                  ) : (<Answer answer={prompt.answer} showRaw={showRawAnswer} />)}
+
+                  {!isLoading[prompt.id] && (prompt.answer == null || prompt.answer["status"] !== 200) && <Button
+                    onClick={() => handleReprocessPrompt(prompt)}
+                    startIcon={<ReplayIcon />}
+                    disabled={isLoading[prompt.id]}
+                  >
+                    Retry
+                  </Button>}
                 </TableCell>
               </TableRow>
             ))}

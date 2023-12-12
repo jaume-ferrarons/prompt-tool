@@ -4,6 +4,8 @@ import { Alert } from '@mui/material'
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'
 
+import './answer.css';
+
 const Answer = ({ answer, showRaw }) => {
     if (answer == null) {
         return <></>
@@ -16,7 +18,7 @@ const Answer = ({ answer, showRaw }) => {
         }
         else {
             return (
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} style={{ "white-space": "pre-wrap" }} className="markdown">
                     {answer["answer"] || ''}
                 </ReactMarkdown>
             );
