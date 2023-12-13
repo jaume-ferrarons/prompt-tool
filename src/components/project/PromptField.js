@@ -1,98 +1,152 @@
-// src/components/project/PromptField.js
-import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+  Button,
+  IconButton,
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 const PromptField = ({ onChange }) => {
-  const [parameters, setParameters] = useState({});
-  const [newPromptText, setNewPromptText] = useState(''); // Define newPromptText state
+  const [examples, setExamples] = useState([{ parameters: {}, text: '' }]);
+  const [newPromptText, setNewPromptText] = useState('');
+  const [finalPrompts, setFinalPrompts] = useState([]);
+  const [parameters, setParameters] = useState([]);
 
-  const handleNewPromptText = (text) => {
-    setNewPromptText(text);
-    generateFinalPrompt(text);
-  }
+  const generateFinalPrompts = () => {
+    let finalPrompts = examples.map((example) => {
+      let generatedPrompt = newPromptText;
 
-  const generateFinalPrompt = (text) => {
-    // Replace parameters in the initial prompt with values
-    let generatedPrompt = text || newPromptText;
-    Object.keys(parameters).forEach((param) => {
-      generatedPrompt = generatedPrompt.replace(`{${param}}`, parameters[param]);
+      if (generatedPrompt) {
+        Object.keys(example.parameters).forEach((param) => {
+          generatedPrompt = generatedPrompt.replace(`{${param}}`, example.parameters[param]);
+        });
+      }
+      return generatedPrompt;
     });
-
-    // Call the onGenerate callback with the final prompt
-    onChange(generatedPrompt);
-
-    return generatedPrompt;
+    if (finalPrompts.length === 0) {
+      finalPrompts = [newPromptText]
+    }
+    onChange(finalPrompts);
+    setFinalPrompts(finalPrompts);
   };
 
-  const handleParameterChange = (param, value) => {
-    // Update the parameters state when input values change
-    setParameters((prevParameters) => ({ ...prevParameters, [param]: value }));
-  };
+  useEffect(generateFinalPrompts, [examples, newPromptText, onChange]);
 
-  const detectParameters = () => {
-    // Regular expression to detect parameters in the prompt
+  useEffect(() => {
     const paramRegex = /\{([^}]+)\}/g;
-
     const matches = newPromptText.match(paramRegex);
-    return matches ? matches.map((match) => match.slice(1, -1)) : [];
+    const newParams = matches ? matches.map((match) => match.slice(1, -1)) : [];
+    setParameters(newParams);
+  }, [newPromptText]);
+
+  const handleParameterChange = (param, value, index) => {
+    setExamples((prevExamples) =>
+      prevExamples.map((example, current_index) =>
+        current_index === index ? { ...example, parameters: { ...example.parameters, [param]: value } } : example
+      )
+    );
+  };
+
+  const handleAddExample = () => {
+    setExamples((prevExamples) => [
+      ...prevExamples,
+      { parameters: {}, text: '' },
+    ]);
+  };
+
+  const handleRemoveExample = (exampleIndex) => {
+    setExamples((prevExamples) => prevExamples.filter((_, index) => index !== exampleIndex));
   };
 
   const renderParameterTable = (paramList) => {
-
-
-    if (paramList.length === 0) {
-      return null;
-    }
-
     return (
       <TableContainer>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Parameter</TableCell>
-              <TableCell>Value</TableCell>
+              {examples.map((example, index) => (
+                <TableCell key={index}>
+                  <Typography variant="subtitle2">
+                    {`Example ${index + 1}`}
+                    <IconButton
+                      onClick={() => handleRemoveExample(index)}
+                      color="error"
+                      size="small"
+                    >
+                      <RemoveIcon />
+                    </IconButton>
+                  </Typography>
+                </TableCell>
+              ))}
             </TableRow>
           </TableHead>
           <TableBody>
             {paramList.map((param) => (
               <TableRow key={param}>
-                <TableCell>{param}</TableCell>
-                <TableCell>
-                  <TextField
-                    fullWidth
-                    multiline
-                    variant="outlined"
-                    label={param}
-                    placeholder={`Enter value for ${param}`}
-                    onChange={(e) => handleParameterChange(param, e.target.value)}
-                  />
-                </TableCell>
+                <TableCell style={{ "minWidth": "20%" }}>{param}</TableCell>
+                {examples.map((example, index) => (
+                  <TableCell key={`${index}_${param}`}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      variant="outlined"
+                      label={param}
+                      value={example["parameters"][param] || ''}
+                      placeholder={`Enter value for ${param}`}
+                      onChange={(e) => handleParameterChange(param, e.target.value, index)}
+                    />
+                  </TableCell>
+                ))}
               </TableRow>
             ))}
+            <TableRow key="final_prompt">
+              <TableCell>Final prompt</TableCell>
+              {finalPrompts.map((text, index) => (
+                <TableCell key={index}>
+                  <pre style={{ "whiteSpace": "pre-wrap" }}>{text}</pre>
+                </TableCell>
+              ))}
+            </TableRow>
           </TableBody>
         </Table>
       </TableContainer>
     );
   };
 
-  const paramList = detectParameters();
-
   return (
     <div>
-      <div>
-        <TextField
-          fullWidth
-          multiline
-          variant="outlined"
-          placeholder="Enter your prompt here..."
-          value={newPromptText}
-          onChange={(e) => handleNewPromptText(e.target.value)}
-        />
-      </div>
-      {renderParameterTable(paramList)}
-      {paramList.length > 0 ? <div>
-        <strong>Final Prompt:</strong> <pre>{generateFinalPrompt()}</pre>
-      </div> : <></>}
+      <TextField
+        fullWidth
+        multiline
+        variant="outlined"
+        placeholder="Enter your prompt here..."
+        label="Prompt"
+        value={newPromptText}
+        onChange={(e) => setNewPromptText(e.target.value)}
+      />
+      {parameters.length > 0 && (
+        <div>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleAddExample}
+            sx={{ marginTop: 2 }}
+          >
+            Add Example
+          </Button>
+        </div>
+      )}
+      {parameters.length > 0 && renderParameterTable(parameters)}
     </div>
   );
 };

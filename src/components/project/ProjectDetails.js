@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  Button, CircularProgress, Grid, Paper, Table, TableBody,
+  Button, CircularProgress, Paper, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
   ToggleButton, ToggleButtonGroup
 } from '@mui/material';
@@ -18,7 +18,7 @@ const ProjectDetails = ({ getProjectById }) => {
   const [project, setProject] = useState(null);
   const [prompts, setPrompts] = useState([]); // Define prompts state
   const [showRawAnswer, setShowRawAnswer] = useState(false); // Define prompts state
-  const [newPromptText, setNewPromptText] = useState(''); // Define newPromptText state
+  const [newPromptText, setNewPromptText] = useState([]); // Define newPromptText state
   const [selectedModel, setSelectedModel] = useState({ "model": "cohere" }); // Define selectedModel state
   const [isLoading, setIsLoading] = useState({});
   const stateRef = useRef();
@@ -40,31 +40,33 @@ const ProjectDetails = ({ getProjectById }) => {
   };
 
   const handleCreatePrompt = async () => {
-    try {
-      // Add the prompt to the indexedDB with computed answer
-      const promptId = await addPrompt({
-        projectId: project.id,
-        text: newPromptText,
-        model: selectedModel,
-        answer: null,
-      });
-
-      const newPrompt = {
-        id: promptId,
-        projectId: project.id,
-        text: newPromptText,
-        model: selectedModel,
-        answer: null, // Set to null initially, will be updated after computation
-      };
-
-      // Add the new prompt to the state immediately
-      setPrompts([newPrompt, ...stateRef.prompts]);
-
-      // Compute and update the answer
-      computePromptAnswer(newPrompt);
-    } catch (error) {
-      console.error('Error creating prompt:', error.message);
-    }
+    newPromptText.map(async(promptText) => {
+      try {
+        // Add the prompt to the indexedDB with computed answer
+        const promptId = await addPrompt({
+          projectId: project.id,
+          text: promptText,
+          model: selectedModel,
+          answer: null,
+        });
+  
+        const newPrompt = {
+          id: promptId,
+          projectId: project.id,
+          text: promptText,
+          model: selectedModel,
+          answer: null, // Set to null initially, will be updated after computation
+        };
+  
+        // Add the new prompt to the state immediately
+        setPrompts([newPrompt, ...stateRef.prompts]);
+  
+        // Compute and update the answer
+        computePromptAnswer(newPrompt);
+      } catch (error) {
+        console.error('Error creating prompt:', error.message);
+      }
+    })
   };
 
   const computePromptAnswer = async (prompt) => {
@@ -107,25 +109,14 @@ const ProjectDetails = ({ getProjectById }) => {
     }
   };
 
-  return (
-    <div>
+  return <div>
       <ModelSelection onSelectModel={setSelectedModel} />
-
-      <Grid container spacing={2} alignItems="flex-end">
-        <Grid item xs={12} md={10}>
-          <PromptField
-            onChange={(updatedPrompt) => setNewPromptText(updatedPrompt)}
-          />
-        </Grid>
-        <Grid item xs={12} md={2}>
-          <Grid spacing={2} justifyContent="center" alignItems="center" container direction="column">
-            <Button variant="contained" color="primary" onClick={handleCreatePrompt} size="small" fullWidth>
-              Execute Prompt
-            </Button>
-          </Grid>
-        </Grid>
-      </Grid>
-
+      <PromptField
+        onChange={setNewPromptText}
+      />
+      <Button variant="contained" color="primary" onClick={handleCreatePrompt}>
+        Run
+      </Button>
       <TableContainer component={Paper} sx={{ marginTop: 2 }}>
         <Table stickyHeader>
           <TableHead>
@@ -173,7 +164,7 @@ const ProjectDetails = ({ getProjectById }) => {
       </TableContainer>
       {/* Additional details and associations with templates/examples */}
     </div>
-  );
+    ;
 };
 
 export default ProjectDetails;

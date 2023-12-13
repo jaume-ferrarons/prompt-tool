@@ -45,7 +45,7 @@ const ModelSelection = ({ onSelectModel }) => {
   }
 
   return <>
-    <Grid sx={{ "margin": 1 }} alignItems="center" container spacing={1}>
+    <Grid sx={{ "padding": 1 }} alignItems="center" container spacing={1}>
       <Grid item>
         <FormControl sx={{ "margin": 1 }}>
           <InputLabel id="select-model-label">Model</InputLabel>

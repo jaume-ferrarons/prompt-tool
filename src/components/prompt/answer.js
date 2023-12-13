@@ -13,12 +13,12 @@ const Answer = ({ answer, showRaw }) => {
     if (answer["status"] === 200) {
         if (showRaw) {
             return (
-                <pre style={{ "white-space": "pre-wrap" }}>{answer["answer"]}</pre>
+                <pre style={{ "whiteSpace": "pre-wrap" }}>{answer["answer"]}</pre>
             );
         }
         else {
             return (
-                <ReactMarkdown remarkPlugins={[remarkGfm]} style={{ "white-space": "pre-wrap" }} className="markdown">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} style={{ "whiteSpace": "pre-wrap" }} className="markdown">
                     {answer["answer"] || ''}
                 </ReactMarkdown>
             );
