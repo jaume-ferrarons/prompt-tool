@@ -4,6 +4,17 @@ import { buildAnswer } from './aiServiceCommon';
 
 const BASE_URL = 'https://api-inference.huggingface.co/models/openchat/openchat_3.5';
 
+function removeEmpty(parameters) {
+  const result = {};
+  for (const [key, value] of Object.entries(parameters)) {
+    if (value !== "") {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+
 const getOpenchatResponse = async (inputs, parameters) => {
   const openchatApiKey = localStorage.getItem('openchatApiKey');
 
@@ -18,7 +29,7 @@ const getOpenchatResponse = async (inputs, parameters) => {
 
   const body = {
     inputs: `GPT4 Correct User: ${inputs}<|end_of_turn|>GPT4 Correct Assistant:`,
-    parameters: parameters
+    parameters: removeEmpty(parameters)
   };
 
   const response = await fetch(BASE_URL, {

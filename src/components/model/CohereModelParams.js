@@ -1,42 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 
-const CohereModelParams = ({ onChange }) => {
-  const [model, setModel] = useState('command');
-  const [preambleOverride, setPreambleOverride] = useState('');
-  const [temperature, setTemperature] = useState('0.3'); // Use string for text field input
-  const [promptTruncation, setPromptTruncation] = useState('AUTO');
-
-  const reportParameters = () => {
+const CohereModelParams = ({ parameters, onChange }) => {
+  const reportParameters = useCallback((parameter) => (event) => {
+    var value = event.target.value;
+    if (parameter === "temperature") value = parseFloat(value);
     onChange({
-      model: model,
-      preamble_override: preambleOverride, 
-      temperature: temperature, 
-      prompt_truncation: promptTruncation
-    })
-  }
-
-  useEffect(reportParameters, [model, preambleOverride, temperature, promptTruncation, onChange]);
-
-  const handleModelChange = (e) => {
-    setModel(e.target.value);
-  };
-
-  const handlePreambleOverrideChange = (e) => {
-    setPreambleOverride(e.target.value);
-  };
-
-  const handleTemperatureChange = (e) => {
-    const value = e.target.value;
-    // Ensure the value is within the valid range (0 to 5)
-    if (/^[0-5](\.\d+)?$/.test(value) || value === '') {
-      setTemperature(parseFloat(value));
-    }
-  };
-
-  const handlePromptTruncationChange = (e) => {
-    setPromptTruncation(e.target.value);
-  };
+      ...parameters,
+      [parameter]: value
+    });
+  }, [parameters, onChange]);
 
   return (
     <>
@@ -45,8 +18,8 @@ const CohereModelParams = ({ onChange }) => {
         <Select
           id="model"
           label="Version"
-          value={model}
-          onChange={handleModelChange}
+          value={parameters["model"] || 'command'}
+          onChange={reportParameters("model")}
           size='small'
         >
           <MenuItem value="command">command</MenuItem>
@@ -66,8 +39,8 @@ const CohereModelParams = ({ onChange }) => {
         InputLabelProps={{
           shrink: true,
         }}
-        value={temperature}
-        onChange={handleTemperatureChange}
+        value={parameters["temperature"] || '0.3'}
+        onChange={reportParameters("temperature")}
         sx={{ margin: 1 }}
       />
 
@@ -76,9 +49,9 @@ const CohereModelParams = ({ onChange }) => {
         <Select
           size="small"
           id="prompt-truncation"
-          value={promptTruncation}
+          value={parameters["prompt_truncation"] || 'AUTO'}
           label="Truncation"
-          onChange={handlePromptTruncationChange}
+          onChange={reportParameters("prompt_truncation")}
         >
           <MenuItem value="OFF">OFF</MenuItem>
           <MenuItem value="AUTO">AUTO</MenuItem>
@@ -90,8 +63,8 @@ const CohereModelParams = ({ onChange }) => {
         multiline
         size='small'
         label="Preamble Override"
-        value={preambleOverride}
-        onChange={handlePreambleOverrideChange}
+        value={parameters["preamble_override"] || ''}
+        onChange={reportParameters("preamble_override")}
         sx={{ margin: 1 }}
       />
 

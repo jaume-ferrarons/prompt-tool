@@ -1,5 +1,5 @@
 // src/components/project/ModelSelection.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Select,
   MenuItem,
@@ -12,37 +12,61 @@ import {
   Collapse
 } from '@mui/material';
 import CohereModelParams from '../model/CohereModelParams';
-import {models} from '../../services/modelRegistry';
+import { models } from '../../services/modelRegistry';
 import HFTextGenParams from '../model/HFTextGenParams';
 
-const ModelSelection = ({ onSelectModel }) => {
+const ModelSelection = ({ model, onSelectModel }) => {
   const [enableCustomParams, setEnableCustomParams] = useState(false);
-  const [modelParameters, setModelParameters] = useState({});
-  const [modelName, setModelName] = useState('cohere');
 
-  const handleModelChange = () => {
-    var parameters = {};
-    if (enableCustomParams) {
-      parameters = modelParameters;
+  const stateRef = useRef();
+  stateRef.modelParameters = {  // Defaults
+    "cohere": {
+      "model": "command",
+      "temperature": "0.3",
+      "prompt_truncation": "AUTO",
+      "preamble_override": "",
+    },
+    "openchat": {
+      "top_k": '',
+      "top_p": '',
+      "temperature": 1.0,
+      "repetition_penalty": '',
+      "max_new_tokens": '',
+      "max_time": '',
+      "return_full_text": false,
+      "num_return_sequences": '',
+      "do_sample": true,
     }
+  };
+
+  const handleCustomParametersSwitch = useCallback(() => {
+    var parameters = {}
+    if (!enableCustomParams) {
+      parameters = stateRef.modelParameters[model["model"]];
+    }
+    setEnableCustomParams(!enableCustomParams);
     onSelectModel({
-      "model": modelName,
+      ...model,
       parameters
     })
-  }
+  }, [model, onSelectModel, enableCustomParams]);
 
-  useEffect(handleModelChange, [modelName, enableCustomParams, modelParameters, onSelectModel])
-
-  const handleCustomParametersSwitch = () => {
-    setEnableCustomParams(!enableCustomParams);
-    setModelParameters({});
-  }
-
-  const handleModelNameChange = (name) => {
-    setModelName(name);
+  const handleModelNameChange = useCallback((event) => {
+    const modelName = event.target.value;
     setEnableCustomParams(false);
-    setModelParameters({});
-  }
+    onSelectModel({
+      model: modelName,
+      parameters: {}
+    })
+  }, [onSelectModel]);
+
+  const handleSetModelParameters = useCallback((model) => (parameters) => {
+    stateRef.modelParameters = { ...stateRef.modelParameters, [model]: parameters };
+    onSelectModel({
+      model: model,
+      parameters: parameters
+    });
+  }, [onSelectModel]);
 
   return <>
     <Grid sx={{ "padding": 1 }} alignItems="center" container spacing={1}>
@@ -51,8 +75,8 @@ const ModelSelection = ({ onSelectModel }) => {
           <InputLabel id="select-model-label">Model</InputLabel>
           <Select labelId="select-model-label"
             size="small" label="Model"
-            value={modelName}
-            onChange={(e) => handleModelNameChange(e.target.value)}>
+            value={model["model"]}
+            onChange={handleModelNameChange}>
             {Object.keys(models).map((model) => (
               <MenuItem key={model} value={model}>
                 {models[model].displayName}
@@ -70,8 +94,11 @@ const ModelSelection = ({ onSelectModel }) => {
     </Grid>
     <Collapse in={enableCustomParams}>
       <Grid component={Paper} sx={{ "margin": 1, "padding": 1 }} xl={12}>
-        {modelName === "cohere" && <CohereModelParams onChange={setModelParameters} />}
-        {modelName === "openchat" && <HFTextGenParams onChange={setModelParameters}/>}
+        {model["model"] === "cohere" && <CohereModelParams parameters={model["parameters"]} onChange={handleSetModelParameters("cohere")} />}
+        {model["model"] === "openchat" && <HFTextGenParams
+          parameters={Object.keys(model["parameters"]).length === 0 ? stateRef.modelParameters["openchat"] : model["parameters"]}
+          onChange={handleSetModelParameters("openchat")}
+        />}
       </Grid>
     </Collapse>
   </>;
