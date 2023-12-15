@@ -40,7 +40,7 @@ const ModelSelection = ({ model, onSelectModel }) => {
   };
 
   const handleCustomParametersSwitch = useCallback(() => {
-    var parameters = {}
+    let parameters = {}
     if (!enableCustomParams) {
       parameters = stateRef.modelParameters[model["model"]];
     }
@@ -94,7 +94,10 @@ const ModelSelection = ({ model, onSelectModel }) => {
     </Grid>
     <Collapse in={enableCustomParams}>
       <Grid component={Paper} sx={{ "margin": 1, "padding": 1 }} xl={12}>
-        {model["model"] === "cohere" && <CohereModelParams parameters={model["parameters"]} onChange={handleSetModelParameters("cohere")} />}
+        {model["model"] === "cohere" && <CohereModelParams
+          parameters={Object.keys(model["parameters"]).length === 0 ? stateRef.modelParameters["cohere"] : model["parameters"]}
+          onChange={handleSetModelParameters("cohere")}
+          />}
         {model["model"] === "openchat" && <HFTextGenParams
           parameters={Object.keys(model["parameters"]).length === 0 ? stateRef.modelParameters["openchat"] : model["parameters"]}
           onChange={handleSetModelParameters("openchat")}

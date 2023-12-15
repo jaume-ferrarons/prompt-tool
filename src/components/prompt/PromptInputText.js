@@ -1,21 +1,20 @@
-import React, { useState } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { TextField } from '@mui/material';
 
-const PromptInputText = ({onChange, onParametersChange}) => {
-    const [prompt, setPrompt] = useState("");
-    const [parameters, setParameters] = useState([]);
+const PromptInputText = ({prompt, onChange, onParametersChange}) => {
+    const parameters = useRef([])
 
-    const handlePromptChange = (prompt) => {
-        setPrompt(prompt);
+    const handlePromptChange = useCallback((event) => {
+        const prompt = event.target.value;
         onChange(prompt);
         const paramRegex = /\{([^}]+)\}/g;
         const matches = prompt.match(paramRegex);
         const newParams = matches ? matches.map((match) => match.slice(1, -1)) : [];
-        if (JSON.stringify(parameters) !== JSON.stringify(newParams)) {
+        if (JSON.stringify(parameters.current) !== JSON.stringify(newParams)) {
             onParametersChange(newParams);
-            setParameters(newParams);
+            parameters.current = newParams;
         }
-    }
+    }, [onChange, onParametersChange]);
 
     return <TextField
         fullWidth
@@ -24,7 +23,7 @@ const PromptInputText = ({onChange, onParametersChange}) => {
         placeholder="Enter your prompt here..."
         label="Prompt"
         value={prompt}
-        onChange={(e) => handlePromptChange(e.target.value)}
+        onChange={handlePromptChange}
     />
 }
 

@@ -3,7 +3,7 @@ import { TextField, FormControlLabel, Checkbox } from '@mui/material';
 
 const HFTextGenParams = ({ parameters, onChange }) => {
   const reportParameters = useCallback((parameter) => (event) => {
-    var value;
+    let value;
     if ([
       "return_full_text",
       "do_sample"

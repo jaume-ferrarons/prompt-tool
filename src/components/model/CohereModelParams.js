@@ -3,7 +3,7 @@ import { TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/mater
 
 const CohereModelParams = ({ parameters, onChange }) => {
   const reportParameters = useCallback((parameter) => (event) => {
-    var value = event.target.value;
+    let value = event.target.value;
     if (parameter === "temperature") value = parseFloat(value);
     onChange({
       ...parameters,

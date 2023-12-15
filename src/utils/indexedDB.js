@@ -31,10 +31,10 @@ export const getPromptsByProjectId = async (projectId) => {
 };
 
 export const addAnswer = async (answerData) => {
-    const { projectId, model, promptId } = answerData;
+    const { projectId, id } = answerData;
 
     // Check if the record already exists
-    const existingRecord = await db.prompts.get({ projectId, model, id: promptId });
+    const existingRecord = await db.prompts.get({ projectId, id });
 
     // If the record exists, update it; otherwise, add a new one
     if (existingRecord) {
