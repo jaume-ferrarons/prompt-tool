@@ -7,29 +7,34 @@ import {
     TableCell,
     TableContainer,
     TableRow,
-    CircularProgress
+    CircularProgress,
+    IconButton,
+    Stack
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+
 import ModelSelection from './ModelSelection';
 import PromptInputText from '../prompt/PromptInputText';
 import ParametersForm from '../prompt/ParametersForm';
 import Answer from '../prompt/answer';
+import { trackEvent } from '../../services/analytics';
 
-const ComparisonMode = ({ executor }) => {
-    const [scenarios, setScenarios] = useState([{
+const getDefaultScenario = () => {
+    return {
         "model": { "model": "cohere", "parameters": {} },
-        "propmt": "",
-        "parameters": []
-    },
-    {
-        "model": { "model": "cohere", "parameters": {} },
-        "propmt": "",
+        "prompt": "",
         "parameters": []
     }
-    ]);
+};
+
+const ComparisonMode = ({ executor }) => {
+    const [scenarios, setScenarios] = useState([getDefaultScenario()]);
     const [examples, setExamples] = useState([]);
     const [responses, setResponses] = useState({})
 
     const run = useCallback(() => {
+        trackEvent("button", "click", "comparison_run");
         scenarios.forEach(({ model, prompt }, scenario_index) => {
             if (examples.length === 0) {
                 const response_key = `${scenario_index}_0`;
@@ -110,6 +115,10 @@ const ComparisonMode = ({ executor }) => {
         setExamples((prevExamples) => [...prevExamples, { parameters }]);
     }, [allParameters, examples])
 
+    const addScenario = useCallback(() => {
+        setScenarios((prevScenarions) => [...prevScenarions, getDefaultScenario()])
+    }, [])
+
     const updateExample = useCallback((index, attr) => (value) => {
         setExamples((prevExample) => prevExample.map((example, currentIndex) => {
             if (currentIndex === index) return {
@@ -120,12 +129,46 @@ const ComparisonMode = ({ executor }) => {
         }));
     }, []);
 
+    const deleteExample = useCallback((index) => () => {
+        setResponses((prevResponses) => {
+            const updated = {};
+            for (let key in prevResponses) {
+                const [scenario_index, example_index] = key.split("_").map(v => parseInt(v, 10));
+                if (example_index < index) updated[key] = prevResponses[key];
+                else if (example_index > index) updated[`${scenario_index}_${example_index - 1}`] = prevResponses[key];
+            }
+            return updated
+        });
+        setExamples((prevExamples) => prevExamples.filter((_, currentIndex) => currentIndex !== index));
+    }, []);
+
+    const deleteScenario = useCallback((index) => () => {
+        setResponses((prevResponses) => {
+            const updated = {};
+            for (let key in prevResponses) {
+                const [scenario_index, example_index] = key.split("_").map(v => parseInt(v, 10));
+                if (scenario_index < index) updated[key] = prevResponses[key];
+                else if (scenario_index > index) updated[`${scenario_index - 1}_${example_index}`] = prevResponses[key];
+            }
+            return updated
+        });
+        setScenarios((prevScenario) => prevScenario.filter((_, currentIndex) => currentIndex !== index));
+    }, []);
+
+    const copyScenario = useCallback((index) => () => {
+        setScenarios((prevScenarios) => [...prevScenarios, prevScenarios[index]]);
+    }, []);
+
+    const copyExample = useCallback((index) => () => {
+        setExamples((prevExamples) => [...prevExamples, prevExamples[index]]);
+    }, []);
+
     const anyLoading = useMemo(() => {
         for (let key in responses) {
             if (responses[key].isLoading === true) return true;
         }
         return false;
-    }, [responses])
+    }, [responses]);
 
     return <TableContainer>
         <Table>
@@ -135,26 +178,45 @@ const ComparisonMode = ({ executor }) => {
                         <Button variant="contained" color="primary" onClick={run} disabled={anyLoading}>
                             Run
                         </Button>
-                        <Button variant="contained" color="primary" onClick={addExample} disabled={anyLoading}>
+                        <Button variant="contained" color="secondary" onClick={addExample} disabled={anyLoading}>
                             Add example
                         </Button>
+                        <Button variant="contained" color="secondary" onClick={addScenario} disabled={anyLoading}>
+                            Add scenario
+                        </Button>
                     </TableCell>
-                    {scenarios.map((scenario, index) => {
-                        return <TableCell key={index}>
+                    {scenarios.map((scenario, scenario_index) => {
+                        return <TableCell key={scenario_index} sx={{ verticalAlign: 'top' }}>
+                            <Stack direction="row" justifyContent="end">
+                                <IconButton color="secondary" onClick={copyScenario(scenario_index)} disabled={anyLoading}>
+                                    <ContentCopyIcon />
+                                </IconButton>
+                                <IconButton color="secondary" onClick={deleteScenario(scenario_index)} disabled={anyLoading}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Stack>
                             <ModelSelection
                                 model={scenario["model"]}
-                                onSelectModel={handleScenarioAttributeChange(index, "model")}
+                                onSelectModel={handleScenarioAttributeChange(scenario_index, "model")}
                             />
                             <PromptInputText
                                 prompt={scenario.prompt}
-                                onChange={handleScenarioAttributeChange(index, "prompt")}
-                                onParametersChange={handleScenarioAttributeChange(index, "parameters")} />
+                                onChange={handleScenarioAttributeChange(scenario_index, "prompt")}
+                                onParametersChange={handleScenarioAttributeChange(scenario_index, "parameters")} />
                         </TableCell>
                     })}
                 </TableRow>
                 {examples.map((example, example_index) =>
                     <TableRow key={example_index}>
-                        <TableCell key="params">
+                        <TableCell key="params"  sx={{ verticalAlign: 'top' }}>
+                            <Stack direction="row" justifyContent="end">
+                                <IconButton color="secondary" onClick={copyExample(example_index)} disabled={anyLoading}>
+                                    <ContentCopyIcon />
+                                </IconButton>
+                                <IconButton color="secondary" onClick={deleteExample(example_index)} disabled={anyLoading}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Stack>
                             <ParametersForm
                                 title={`Example ${example_index + 1}`}
                                 values={example.parameters}

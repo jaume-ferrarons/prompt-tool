@@ -5,13 +5,24 @@ import Layout from './components/common/Layout';
 import ProjectDetails from './components/project/ProjectDetails';
 import { getProjectById } from './utils/indexedDB';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { lime, grey } from '@mui/material/colors';
+import ReactGA from "react-ga4";
 
-const theme = createTheme();
+ReactGA.initialize("G-B8TSRE6890");
+
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: lime,
+    secondary: grey,
+  },
+});
 
 function App() {
-
   return (
     <ThemeProvider theme={theme}>
+      <CssBaseline />
       <Router>
         <Routes basename='/prompt-tool'>
           <Route path="/" exact element={

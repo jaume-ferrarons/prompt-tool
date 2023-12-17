@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getAllProjects, addProject } from '../../utils/indexedDB';
 import ApiKeyDialog from './ApiKeyDialog';
 import CreateProjectDialog from './CreateProjectDialog';
+import PageTracking from './PageTracking';
 
 const Layout = ({ children }) => {
   const { projectId } = useParams();
@@ -85,6 +86,7 @@ const Layout = ({ children }) => {
 
   return (
     <div>
+      <PageTracking/>
       <AppBar position="static">
         <Toolbar>
           <Select

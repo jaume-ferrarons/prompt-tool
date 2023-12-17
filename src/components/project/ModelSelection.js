@@ -16,7 +16,7 @@ import { models } from '../../services/modelRegistry';
 import HFTextGenParams from '../model/HFTextGenParams';
 
 const ModelSelection = ({ model, onSelectModel }) => {
-  const [enableCustomParams, setEnableCustomParams] = useState(false);
+  const [enableCustomParams, setEnableCustomParams] = useState(Object.keys(model.parameters).length > 0);
 
   const stateRef = useRef();
   stateRef.modelParameters = {  // Defaults

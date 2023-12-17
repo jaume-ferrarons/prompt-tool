@@ -132,22 +132,26 @@ const ProjectDetails = ({ getProjectById }) => {
 
   return (
     <div>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={inputMode} onChange={changeInputMode}>
-          <Tab label="Basic mode" value="basic" />
-          <Tab label="Comparison mode" value="comparison" />
-        </Tabs>
-      </Box>
-      {inputMode === "comparison" && <ComparisonMode executor={handleCreatePrompt} />}
-      {inputMode === "basic" && <>
-        <ModelSelection model={selectedModel} onSelectModel={setSelectedModel} />
-        <PromptField
-          onChange={setNewPromptText}
-        />
-        <Button variant="contained" color="primary" onClick={run}>
-          Run
-        </Button>
-      </>}
+      <Paper sx={{margin: 1}}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={inputMode} onChange={changeInputMode}>
+            <Tab label="Basic mode" value="basic" />
+            <Tab label="Comparison mode" value="comparison" />
+          </Tabs>
+        </Box>
+        <Box sx={{padding: 1}}>
+          {inputMode === "comparison" && <ComparisonMode executor={handleCreatePrompt} />}
+          {inputMode === "basic" && <>
+            <ModelSelection model={selectedModel} onSelectModel={setSelectedModel} />
+            <PromptField
+              onChange={setNewPromptText}
+            />
+            <Button variant="contained" color="primary" onClick={run}>
+              Run
+            </Button>
+          </>}
+        </Box>
+      </Paper>
       {useMemo(() =>
         <TableContainer component={Paper} sx={{ marginTop: 2 }}>
           <Table stickyHeader>
