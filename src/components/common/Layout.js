@@ -95,7 +95,6 @@ const Layout = ({ children }) => {
             displayEmpty
             inputProps={{ 'aria-label': 'Without label' }}
             sx={{
-              fontSize: '1.2rem',
               color: 'white',
               '& .MuiSelect-icon': {
                 color: 'white',
@@ -116,8 +115,7 @@ const Layout = ({ children }) => {
               Create new project
             </MenuItem>
           </Select>
-
-          <Button color="inherit" onClick={handleApiKeyDialogOpen}>
+          <Button color="primary" onClick={handleApiKeyDialogOpen}>
             API Keys
           </Button>
         </Toolbar>
