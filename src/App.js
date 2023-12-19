@@ -9,6 +9,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { lime, grey } from '@mui/material/colors';
 import ReactGA from "react-ga4";
 import GettingStarted from './components/landing/GettingStarted';
+import GDPRWarning from './components/common/GDPRWarning';
 
 ReactGA.initialize("G-B8TSRE6890");
 
@@ -25,6 +26,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
+        <GDPRWarning/>
         <Routes basename='/prompt-tool'>
           <Route path="/" exact element={
             <Layout>
