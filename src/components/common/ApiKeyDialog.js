@@ -32,6 +32,7 @@ const ApiKeyDialog = ({ open, onClose, onSave }) => {
         <DialogContentText>
           Enter your API keys for Cohere and OpenChat.
         </DialogContentText>
+        Cohere API Key:
         <TextField
           autoFocus
           margin="dense"
@@ -41,9 +42,10 @@ const ApiKeyDialog = ({ open, onClose, onSave }) => {
           value={cohereApiKey}
           onChange={(e) => setCohereApiKey(e.target.value)}
         />
+        Huggingface API Key:
         <TextField
           margin="dense"
-          label="OpenChat API Key"
+          label="Huggingface API Key"
           type={showKeys ? 'text' : 'password'}
           fullWidth
           value={openchatApiKey}

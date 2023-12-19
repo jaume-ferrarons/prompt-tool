@@ -9,7 +9,9 @@ import {
     TableRow,
     CircularProgress,
     IconButton,
-    Stack
+    Stack,
+    Typography,
+    Box
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -30,59 +32,74 @@ const getDefaultScenario = () => {
 
 const ComparisonMode = ({ executor }) => {
     const [scenarios, setScenarios] = useState([getDefaultScenario()]);
-    const [examples, setExamples] = useState([]);
-    const [responses, setResponses] = useState({})
+    const [examples, setExamples] = useState([{"parameters": {}}]);
+    const [responses, setResponses] = useState({});
 
-    const run = useCallback(() => {
-        trackEvent("button", "click", "comparison_run");
-        scenarios.forEach(({ model, prompt }, scenario_index) => {
-            if (examples.length === 0) {
-                const response_key = `${scenario_index}_0`;
+    const executeByCoordinate = useCallback((scenario_index, example_index) => {
+        const { model, prompt } = scenarios[scenario_index];
+        if (examples.length === 0) {
+            const response_key = `${scenario_index}_0`;
+            setResponses((prevResponses) => ({
+                ...prevResponses,
+                [response_key]: {
+                    isLoading: true,
+                    prompt
+                }
+            }));
+            executor(prompt, model, (response) => {
                 setResponses((prevResponses) => ({
                     ...prevResponses,
                     [response_key]: {
-                        isLoading: true,
-                        prompt
+                        ...prevResponses[response_key],
+                        isLoading: false,
+                        response
                     }
                 }));
-                executor(prompt, model, (response) => {
-                    setResponses((prevResponses) => ({
-                        ...prevResponses,
-                        [response_key]: {
-                            ...prevResponses[response_key],
-                            isLoading: false,
-                            response
-                        }
-                    }));
-                });
+            });
+        } else {
+            const response_key = `${scenario_index}_${example_index}`;
+            const { parameters } = examples[example_index];
+            let finalPrompt = prompt;
+            Object.keys(parameters).forEach((param) => {
+                finalPrompt = finalPrompt.replace(`{${param}}`, parameters[param]);
+            });
+            setResponses((prevResponses) => ({
+                ...prevResponses,
+                [response_key]: {
+                    isLoading: true,
+                    prompt: finalPrompt
+                }
+            }));
+            executor(finalPrompt, model, (response) => {
+                setResponses((prevResponses) => ({
+                    ...prevResponses,
+                    [response_key]: {
+                        ...prevResponses[response_key],
+                        isLoading: false,
+                        response
+                    }
+                }));
+            });
+        }
+    }, [executor, scenarios, examples]);
+
+    const runOne = useCallback((scenario_index, example_index) => () => {
+        trackEvent("button", "click", "comparison_run_all");
+        executeByCoordinate(scenario_index, example_index);
+    }, [executeByCoordinate]);
+
+    const runAll = useCallback(() => {
+        trackEvent("button", "click", "comparison_run_all");
+        scenarios.forEach((_, scenario_index) => {
+            if (examples.length === 0) {
+                executeByCoordinate(scenario_index, 0);
             } else {
-                examples.forEach(({ parameters }, example_index) => {
-                    const response_key = `${scenario_index}_${example_index}`;
-                    let finalPrompt = prompt;
-                    Object.keys(parameters).forEach((param) => {
-                        finalPrompt = finalPrompt.replace(`{${param}}`, parameters[param]);
-                    });
-                    setResponses((prevResponses) => ({
-                        ...prevResponses,
-                        [response_key]: {
-                            isLoading: true,
-                            prompt: finalPrompt
-                        }
-                    }));
-                    executor(finalPrompt, model, (response) => {
-                        setResponses((prevResponses) => ({
-                            ...prevResponses,
-                            [response_key]: {
-                                ...prevResponses[response_key],
-                                isLoading: false,
-                                response
-                            }
-                        }));
-                    });
+                examples.forEach((_, example_index) => {
+                    executeByCoordinate(scenario_index, example_index);
                 })
             }
         });
-    }, [executor, scenarios, examples]);
+    }, [executeByCoordinate, scenarios, examples]);
 
     const setScenarioAttribute = useCallback((index, attr, value) => {
         setScenarios((preScenarios) => preScenarios.map((scenario, currentIndex) => {
@@ -175,23 +192,25 @@ const ComparisonMode = ({ executor }) => {
             <TableBody>
                 <TableRow>
                     <TableCell>
-                        <Button variant="contained" color="primary" onClick={run} disabled={anyLoading}>
-                            Run
+                        <Button fullWidth variant="contained" color="primary" onClick={runAll} disabled={anyLoading}>
+                            Run All
                         </Button>
-                        <Button variant="contained" color="secondary" onClick={addExample} disabled={anyLoading}>
+                        <Button fullWidth variant="contained" color="secondary" onClick={addExample} disabled={anyLoading}>
                             Add example
                         </Button>
-                        <Button variant="contained" color="secondary" onClick={addScenario} disabled={anyLoading}>
+                        <Button fullWidth variant="contained" color="secondary" onClick={addScenario} disabled={anyLoading}>
                             Add scenario
                         </Button>
                     </TableCell>
                     {scenarios.map((scenario, scenario_index) => {
                         return <TableCell key={scenario_index} sx={{ verticalAlign: 'top' }}>
-                            <Stack direction="row" justifyContent="end">
+                            <Stack direction="row" alignItems="center">
+                                <Typography variant='h6'>Scenario {scenario_index + 1}</Typography>
+                                <Box flexGrow={1}/>
                                 <IconButton color="secondary" onClick={copyScenario(scenario_index)} disabled={anyLoading}>
                                     <ContentCopyIcon />
                                 </IconButton>
-                                <IconButton color="secondary" onClick={deleteScenario(scenario_index)} disabled={anyLoading}>
+                                <IconButton color="secondary" onClick={deleteScenario(scenario_index)} disabled={anyLoading || scenarios.length === 1}>
                                     <DeleteIcon />
                                 </IconButton>
                             </Stack>
@@ -208,17 +227,18 @@ const ComparisonMode = ({ executor }) => {
                 </TableRow>
                 {examples.map((example, example_index) =>
                     <TableRow key={example_index}>
-                        <TableCell key="params"  sx={{ verticalAlign: 'top' }}>
-                            <Stack direction="row" justifyContent="end">
+                        <TableCell key="params" sx={{ verticalAlign: 'top' }}>
+                            <Stack direction="row" alignItems="center">
+                                <Typography variant='h6'>Example {example_index + 1}</Typography>
+                                <Box flexGrow={1}/>
                                 <IconButton color="secondary" onClick={copyExample(example_index)} disabled={anyLoading}>
                                     <ContentCopyIcon />
                                 </IconButton>
-                                <IconButton color="secondary" onClick={deleteExample(example_index)} disabled={anyLoading}>
+                                <IconButton color="secondary" onClick={deleteExample(example_index)} disabled={anyLoading || examples.length === 1}>
                                     <DeleteIcon />
                                 </IconButton>
                             </Stack>
                             <ParametersForm
-                                title={`Example ${example_index + 1}`}
                                 values={example.parameters}
                                 parameters={allParameters}
                                 onChange={updateExample(example_index, "parameters")}
@@ -226,13 +246,17 @@ const ComparisonMode = ({ executor }) => {
                         </TableCell>
                         {scenarios.map((scenario, scenario_index) => {
                             const responseKey = `${scenario_index}_${example_index}`;
-                            return <TableCell key={responseKey}>
+                            return <TableCell key={responseKey} align='center'>
                                 {responses[responseKey] ?
                                     <>
                                         {responses[responseKey].isLoading === true && <CircularProgress size={24} sx={{ marginRight: 2 }} />}
                                         {responses[responseKey].isLoading === false && <Answer answer={responses[responseKey].response.answer} showRaw={false} />}
                                     </>
-                                    : <div>Empty</div>
+                                    : <div>
+                                        <Button variant="contained" color="primary" onClick={runOne(scenario_index, example_index)} disabled={anyLoading}>
+                                            Run
+                                        </Button>
+                                    </div>
                                 }
                             </TableCell>
                         })}
@@ -248,7 +272,9 @@ const ComparisonMode = ({ executor }) => {
                                     {responses[responseKey].isLoading === true && <CircularProgress size={24} sx={{ marginRight: 2 }} />}
                                     {responses[responseKey].isLoading === false && <Answer answer={responses[responseKey].response.answer} showRaw={false} />}
                                 </>
-                                : <div>Empty</div>
+                                : <Button variant="contained" color="primary" onClick={runOne(scenario_index, 0)} disabled={anyLoading}>
+                                    Run
+                                </Button>
                             }
                         </TableCell>
                     })}
