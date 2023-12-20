@@ -1,7 +1,7 @@
 // src/components/common/Layout.js
 import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, Select, MenuItem, Button } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { AppBar, Toolbar, Select, MenuItem, Button, Typography, Box } from '@mui/material';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getAllProjects, addProject } from '../../utils/indexedDB';
 import ApiKeyDialog from './ApiKeyDialog';
 import CreateProjectDialog from './CreateProjectDialog';
@@ -89,12 +89,16 @@ const Layout = ({ children }) => {
       <PageTracking/>
       <AppBar position="static">
         <Toolbar>
+          <Link to="/">
+            <Typography variant="h5" color="primary">PromptTool</Typography>
+          </Link>
           <Select
             value={selectedProject}
             onChange={handleProjectChange}
             displayEmpty
             inputProps={{ 'aria-label': 'Without label' }}
             sx={{
+              marginLeft:4,
               color: 'white',
               '& .MuiSelect-icon': {
                 color: 'white',
@@ -115,6 +119,7 @@ const Layout = ({ children }) => {
               Create new project
             </MenuItem>
           </Select>
+          <Box flexGrow={1}/>
           <Button color="primary" onClick={handleApiKeyDialogOpen}>
             API Keys
           </Button>
