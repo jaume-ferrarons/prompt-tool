@@ -33,7 +33,7 @@ function App() {
       <CssBaseline />
       <Router>
         <GDPRWarning/>
-        <Routes basename='/prompt-tool'>
+        <Routes basename='/prompttool'>
           <Route path="/" exact element={
             <Layout>
               <GettingStarted/>
