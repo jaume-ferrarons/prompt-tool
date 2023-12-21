@@ -1,6 +1,4 @@
 
-import { buildAnswer } from './aiServiceCommon';
-
 const BASE_URL = 'https://api.openai.com/v1/chat/completions';
 
 export const openAIParameters = [
