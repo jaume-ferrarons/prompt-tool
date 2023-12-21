@@ -5,16 +5,22 @@ To begin using this tool effectively, you'll need to set up API keys for at leas
 
 **IMPORTANT: This webapp stores the API Keys only in your browser (Local Storage)**
 
+### Cohere API
+
+1. **Register or Sign In**: Login or create an account on [Cohere](https://dashboard.cohere.com/)
+2. **Get an API Key**: Access [API Keys section](https://dashboard.cohere.com/api-keys) in Cohere's dashboard and create a new token. Copy the API Key.
+3. **Configure API Key**: Paste the copied API Key into the API Keys configuration dialog accessible from the top bar.
+
 ### Huggingface Inference API
 
 1. **Register or Sign In**: Login or create an account on [Huggingface](https://huggingface.co/).
 2. **Generate a Token**: Go to [Access Tokens setting](https://huggingface.co/settings/tokens) and create a new token. Copy the token.
 3. **Configure API Key**: Paste the copied token into the API Keys configuration dialog accessible from the top bar.
 
-### Cohere API
+### OpenAI API
 
-1. **Register or Sign In**: Login or create an account on [Cohere](https://dashboard.cohere.com/)
-2. **Get an API Key**: Access [API Keys section](https://dashboard.cohere.com/api-keys) in Cohere's dashboard and create a new token. Copy the API Key.
+1. **Register or Sign In**: Login or create an account on [OpenAI](https://platform.openai.com)
+2. **Get an API Key**: Access [API Keys section](https://platform.openai.com/api-keys) in OpenAI's dashboard and create a new token. Copy the API Key.
 3. **Configure API Key**: Paste the copied API Key into the API Keys configuration dialog accessible from the top bar.
 
 ## 2. Start prompting

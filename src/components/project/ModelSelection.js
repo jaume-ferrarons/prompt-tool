@@ -11,9 +11,8 @@ import {
   Paper,
   Collapse
 } from '@mui/material';
-import CohereModelParams from '../model/CohereModelParams';
 import { models } from '../../services/modelRegistry';
-import HFTextGenParams from '../model/HFTextGenParams';
+import ModelParams from '../model/ModelParams';
 
 const ModelSelection = ({ model, onSelectModel }) => {
   const [enableCustomParams, setEnableCustomParams] = useState(Object.keys(model.parameters).length > 0);
@@ -36,6 +35,14 @@ const ModelSelection = ({ model, onSelectModel }) => {
       "return_full_text": false,
       "num_return_sequences": '',
       "do_sample": true,
+    },
+    "openai": {
+      "model": "gpt-3.5-turbo",
+      "temperature": 1.0,
+      "max_tokens": 256,
+      "top_p": 1,
+      "frequency_penalty": 0,
+      "presence_penalty": 0
     }
   };
 
@@ -94,14 +101,9 @@ const ModelSelection = ({ model, onSelectModel }) => {
     </Grid>
     <Collapse in={enableCustomParams}>
       <Grid component={Paper} sx={{ "margin": 1, "padding": 1 }} xl={12}>
-        {model["model"] === "cohere" && <CohereModelParams
-          parameters={Object.keys(model["parameters"]).length === 0 ? stateRef.modelParameters["cohere"] : model["parameters"]}
-          onChange={handleSetModelParameters("cohere")}
-          />}
-        {model["model"] === "openchat" && <HFTextGenParams
-          parameters={Object.keys(model["parameters"]).length === 0 ? stateRef.modelParameters["openchat"] : model["parameters"]}
-          onChange={handleSetModelParameters("openchat")}
-        />}
+        <ModelParams values={model["parameters"]}
+          parametersConfig={models[model.model].parameters}
+          onChange={handleSetModelParameters(model.model)} />
       </Grid>
     </Collapse>
   </>;

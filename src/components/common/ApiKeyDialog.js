@@ -15,10 +15,11 @@ import {
 const ApiKeyDialog = ({ open, onClose, onSave }) => {
   const [cohereApiKey, setCohereApiKey] = useState(localStorage.getItem('cohereApiKey') || '');
   const [openchatApiKey, setOpenchatApiKey] = useState(localStorage.getItem('openchatApiKey') || '');
+  const [openaiApiKey, setOpenAIApiKey] = useState(localStorage.getItem('openaiApiKey') || '');
   const [showKeys, setShowKeys] = useState(false);
 
   const handleSave = () => {
-    onSave(cohereApiKey, openchatApiKey);
+    onSave(cohereApiKey, openchatApiKey, openaiApiKey);
   };
 
   return (
@@ -30,7 +31,7 @@ const ApiKeyDialog = ({ open, onClose, onSave }) => {
           label="Show Keys"
         />
         <DialogContentText>
-          Enter your API keys for Cohere and OpenChat.
+          Enter your API keys to be used:
         </DialogContentText>
         Cohere API Key:
         <TextField
@@ -50,6 +51,15 @@ const ApiKeyDialog = ({ open, onClose, onSave }) => {
           fullWidth
           value={openchatApiKey}
           onChange={(e) => setOpenchatApiKey(e.target.value)}
+        />
+        OpenAI API Key:
+        <TextField
+          margin="dense"
+          label="OpenAI API Key"
+          type={showKeys ? 'text' : 'password'}
+          fullWidth
+          value={openaiApiKey}
+          onChange={(e) => setOpenAIApiKey(e.target.value)}
         />
       </DialogContent>
       <DialogActions>

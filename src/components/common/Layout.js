@@ -51,10 +51,11 @@ const Layout = ({ children }) => {
     setOpenApiKeyDialog(false);
   };
 
-  const handleSaveApiKeys = (cohereApiKey, openchatApiKey) => {
+  const handleSaveApiKeys = (cohereApiKey, openchatApiKey, openaiApiKey) => {
     // Save API keys to localStorage
     localStorage.setItem('cohereApiKey', cohereApiKey);
     localStorage.setItem('openchatApiKey', openchatApiKey);
+    localStorage.setItem('openaiApiKey', openaiApiKey);
 
     // Close the dialog
     setOpenApiKeyDialog(false);
