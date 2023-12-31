@@ -8,7 +8,6 @@ import {
   Grid,
   FormControlLabel,
   Switch,
-  Paper,
   Collapse
 } from '@mui/material';
 import { models } from '../../services/modelRegistry';
