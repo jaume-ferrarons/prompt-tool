@@ -99,15 +99,15 @@ function removeEmpty(parameters) {
 }
 
 const getOpenchatResponse = async (inputs, parameters) => {
-  const openchatApiKey = localStorage.getItem('openchatApiKey');
+  const hfInferenceApiKey = localStorage.getItem('hfInferenceApiKey');
 
-  if (!openchatApiKey) {
+  if (!hfInferenceApiKey) {
     throw new Error('OpenChat API key not found in local storage.');
   }
 
   const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${openchatApiKey}`,
+    'Authorization': `Bearer ${hfInferenceApiKey}`,
   };
 
   const body = {

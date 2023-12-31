@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'
 
 import './answer.css';
+import ImageView from "../common/ImageView";
 
 const Answer = ({ answer, showRaw }) => {
     if (answer == null) {
@@ -17,6 +18,9 @@ const Answer = ({ answer, showRaw }) => {
             );
         }
         else {
+            if (answer.kind === "image") {
+                return <ImageView src={answer.answer} alt={answer.answer} size={200}/>
+            }
             return (
                 <ReactMarkdown remarkPlugins={[remarkGfm]} style={{ "whiteSpace": "pre-wrap" }} className="markdown">
                     {answer["answer"] || ''}

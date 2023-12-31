@@ -51,10 +51,10 @@ const Layout = ({ children }) => {
     setOpenApiKeyDialog(false);
   };
 
-  const handleSaveApiKeys = (cohereApiKey, openchatApiKey, openaiApiKey) => {
+  const handleSaveApiKeys = (cohereApiKey, hfInferenceApiKey, openaiApiKey) => {
     // Save API keys to localStorage
     localStorage.setItem('cohereApiKey', cohereApiKey);
-    localStorage.setItem('openchatApiKey', openchatApiKey);
+    localStorage.setItem('hfInferenceApiKey', hfInferenceApiKey);
     localStorage.setItem('openaiApiKey', openaiApiKey);
 
     // Close the dialog

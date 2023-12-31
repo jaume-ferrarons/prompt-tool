@@ -1,6 +1,6 @@
 import cohereApiRequest, {cohereParameters} from './cohereService';
 import openAIApiRequest, {openAIParameters} from './openaiService';
-import openchatApiRequest, {hfParameters} from './openchatService';
+import hfInferenceApiRequest, {hfParametersText2Text, hfParametersText2Image} from './hfInferenceAPIService';
 
 const models = {
     "cohere": {
@@ -13,10 +13,15 @@ const models = {
         apiRequest: openAIApiRequest,
         parameters: openAIParameters
     },
-    "openchat": {
-        displayName: 'OpenChat 3.5',
-        apiRequest: openchatApiRequest,
-        parameters: hfParameters
+    "hfInferenceAPI": {
+        displayName: 'HuggingFace API (text2text)',
+        apiRequest: hfInferenceApiRequest("text2text"),
+        parameters: hfParametersText2Text
+    },
+    "hfInferenceAPIText2Image": {
+        displayName: 'HuggingFace API (text2image)',
+        apiRequest: hfInferenceApiRequest("text2image"),
+        parameters: hfParametersText2Image
     },
 };
 

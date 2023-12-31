@@ -24,6 +24,7 @@ const PromptInputText = ({prompt, onChange, onParametersChange}) => {
         label="Prompt"
         value={prompt}
         onChange={handlePromptChange}
+        sx={{"margin": 2}}
     />
 }
 

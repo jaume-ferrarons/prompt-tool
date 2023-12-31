@@ -1,5 +1,5 @@
 // src/components/project/ProjectDetails.js
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Button, CircularProgress, Paper, Table, TableBody,
@@ -25,9 +25,6 @@ const ProjectDetails = ({ getProjectById }) => {
   const [isLoading, setIsLoading] = useState({});
   const [inputMode, setInputMode] = useState("basic");
 
-  const stateRef = useRef();
-  stateRef.prompts = prompts;
-
   useEffect(() => {
     const fetchProject = async () => {
       const projectData = await getProjectById(Number(projectId));
@@ -43,40 +40,42 @@ const ProjectDetails = ({ getProjectById }) => {
     setPrompts(promptsFromDB.reverse()); // Reverse to display newest prompts on top
   };
 
+  const setModelResponse = useCallback(async (prompt, modelResponse, cb) => {
+    setPrompts((prevPrompts) => prevPrompts.map((prevPrompt) =>
+      prevPrompt.id === prompt.id ? { ...prevPrompt, answer: modelResponse } : prevPrompt
+    ));
+
+    // Add the answer to the indexedDB for future reference
+    const promptData = {
+      projectId: project.id,
+      model: prompt.model,
+      id: prompt.id,
+      answer: modelResponse,
+      text: prompt.text,
+    }
+
+    await addAnswer(promptData);
+    if (cb) {
+      cb(promptData);
+    }
+  }, [project])
+
   const computePromptAnswer = useCallback(async (prompt, cb) => {
     try {
       const model = models[prompt["model"]["model"]];
-
       setIsLoading((prevLoading) => ({ ...prevLoading, [prompt.id]: true }));
-
       // Call the selected model
       const modelResponse = await model.apiRequest(prompt.text, prompt["model"]["parameters"]);
-
-      // Update state based on the selected model
-      const updatedPrompts = stateRef.prompts.map((prevPrompt) =>
-        prevPrompt.id === prompt.id ? { ...prevPrompt, answer: modelResponse } : prevPrompt
-      );
-      setPrompts(updatedPrompts);
-
-      // Add the answer to the indexedDB for future reference
-      const promptData = {
-        projectId: project.id,
-        model: prompt.model,
-        id: prompt.id,
-        answer: modelResponse,
-        text: prompt.text,
-      }
-
-      await addAnswer(promptData);
-      if (cb) {
-        cb(promptData);
-      }
+      setModelResponse(prompt, modelResponse, cb);
     } catch (error) {
       console.error('Error computing prompt answer:', error.message);
+      setModelResponse(prompt, {
+        status: -1, raw: error, errorMessage: error.message, answer: null
+      }, cb);
     } finally {
       setIsLoading((prevLoading) => ({ ...prevLoading, [prompt.id]: false }));
     }
-  }, [project]);
+  }, [setModelResponse]);
 
   const handleCreatePrompt = useCallback(async (promptText, model, cb) => {
     try {
@@ -97,7 +96,7 @@ const ProjectDetails = ({ getProjectById }) => {
       };
 
       // Add the new prompt to the state immediately
-      setPrompts([newPrompt, ...stateRef.prompts]);
+      setPrompts((prevPrompts) => [newPrompt, ...prevPrompts]);
 
       // Compute and update the answer
       computePromptAnswer(newPrompt, cb);
@@ -132,14 +131,14 @@ const ProjectDetails = ({ getProjectById }) => {
 
   return (
     <div>
-      <Paper sx={{margin: 1}}>
+      <Paper sx={{ margin: 1 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={inputMode} onChange={changeInputMode}>
             <Tab label="Basic mode" value="basic" />
             <Tab label="Comparison mode" value="comparison" />
           </Tabs>
         </Box>
-        <Box sx={{padding: 1}}>
+        <Box sx={{ padding: 1 }}>
           {inputMode === "comparison" && <ComparisonMode executor={handleCreatePrompt} />}
           {inputMode === "basic" && <>
             <ModelSelection model={selectedModel} onSelectModel={setSelectedModel} />

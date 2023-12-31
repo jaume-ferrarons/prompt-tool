@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { TextField, Select, MenuItem, FormControl, InputLabel, FormControlLabel, Checkbox } from '@mui/material';
+import { TextField, Select, MenuItem, FormControl, InputLabel, FormControlLabel, Checkbox, Autocomplete } from '@mui/material';
 
 const ModelParams = ({ values, onChange, parametersConfig }) => {
     const handleIfNumeric = useCallback((parameterId, value) => {
@@ -24,7 +24,7 @@ const ModelParams = ({ values, onChange, parametersConfig }) => {
     }, [values, onChange]);
 
     const reportTextParameter = useCallback((parameter) => (event) => {
-        let value = event.target.value;
+        let value = event.target.textContent || event.target.value;
         value = handleIfNumeric(parameter, value);
         reportParameter(parameter, value);
     }, [reportParameter, handleIfNumeric])
@@ -85,6 +85,18 @@ const ModelParams = ({ values, onChange, parametersConfig }) => {
                 }
                 label={parameter.label}
             />;
+        }
+        else if (parameter.type === "autocomplete") {
+            return <Autocomplete key={index}
+                freeSolo
+                disableClearable
+                fullWidth={parameter.fullWidth}
+                options={parameter.options.sort()}
+                value={values[parameter.id] || parameter.default}
+                renderInput={(params) => <TextField {...params} label={parameter.label} />}
+                onChange={reportTextParameter(parameter.id)}
+                sx={{ margin: 1 }}
+            />
         }
     }
 

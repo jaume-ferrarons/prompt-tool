@@ -14,12 +14,12 @@ import {
 
 const ApiKeyDialog = ({ open, onClose, onSave }) => {
   const [cohereApiKey, setCohereApiKey] = useState(localStorage.getItem('cohereApiKey') || '');
-  const [openchatApiKey, setOpenchatApiKey] = useState(localStorage.getItem('openchatApiKey') || '');
+  const [hfInferenceApiKey, sethfInferenceApiKey] = useState(localStorage.getItem('hfInferenceApiKey') || '');
   const [openaiApiKey, setOpenAIApiKey] = useState(localStorage.getItem('openaiApiKey') || '');
   const [showKeys, setShowKeys] = useState(false);
 
   const handleSave = () => {
-    onSave(cohereApiKey, openchatApiKey, openaiApiKey);
+    onSave(cohereApiKey, hfInferenceApiKey, openaiApiKey);
   };
 
   return (
@@ -49,8 +49,8 @@ const ApiKeyDialog = ({ open, onClose, onSave }) => {
           label="Huggingface API Key"
           type={showKeys ? 'text' : 'password'}
           fullWidth
-          value={openchatApiKey}
-          onChange={(e) => setOpenchatApiKey(e.target.value)}
+          value={hfInferenceApiKey}
+          onChange={(e) => sethfInferenceApiKey(e.target.value)}
         />
         OpenAI API Key:
         <TextField

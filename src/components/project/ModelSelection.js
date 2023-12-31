@@ -43,6 +43,12 @@ const ModelSelection = ({ model, onSelectModel }) => {
       "top_p": 1,
       "frequency_penalty": 0,
       "presence_penalty": 0
+    },
+    "hfInferenceAPI": {
+      "model": "mistralai/Mistral-7B-v0.1",
+    },
+    "hfInferenceAPIText2Image": {
+      "model": "dataautogpt3/OpenDalle",
     }
   };
 
@@ -78,7 +84,7 @@ const ModelSelection = ({ model, onSelectModel }) => {
   return <>
     <Grid sx={{ "padding": 1 }} alignItems="center" container spacing={1}>
       <Grid item>
-        <FormControl sx={{ "margin": 1 }}>
+        <FormControl sx={{ "marginLeft": 1 }}>
           <InputLabel id="select-model-label">Model</InputLabel>
           <Select labelId="select-model-label"
             size="small" label="Model"
@@ -100,7 +106,7 @@ const ModelSelection = ({ model, onSelectModel }) => {
       </Grid>
     </Grid>
     <Collapse in={enableCustomParams}>
-      <Grid component={Paper} sx={{ "margin": 1, "padding": 1 }} xl={12}>
+      <Grid sx={{ "marginLeft": 1 }} xl={12}>
         <ModelParams values={model["parameters"]}
           parametersConfig={models[model.model].parameters}
           onChange={handleSetModelParameters(model.model)} />
